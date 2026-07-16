@@ -76,14 +76,20 @@ min-height:170px;
 CARD
 =========================== */
 .card{
+
 background:linear-gradient(
 135deg,
 #0B4EA2,
 #42A5F5);
-padding:25px;
-border-radius:22px;
-box-shadow:0 10px 25px rgba(0,0,0,.08);
-margin-bottom:20px;
+
+height:55px;
+
+border-radius:28px;
+
+box-shadow:0 10px 25px rgba(0,0,0,.15);
+
+margin-bottom:15px;
+
 }
 
 /* ===========================
@@ -332,105 +338,127 @@ with col2:
     #</div>
     # """, unsafe_allow_html=True)
 
-# =====================================================
-# FILTER
-# =====================================================
-
 f1, f2 = st.columns(2)
 
+# =====================================================
+# PILIH BULAN
+# =====================================================
 with f1:
-    with st.container():
-        st.markdown("""
-        <div class="card">
-        """, unsafe_allow_html=True)
-        st.markdown("""
-        <div style="
-        font-size:30px;
-        font-weight:700;
-        color:#0B4EA2;
-        margin-bottom:15px;">
-        📅 Pilih Bulan
-        </h4>
-        """, unsafe_allow_html=True)
 
-        bulan = st.selectbox(
-            "",
-            list(bulan_sheet.keys()),
-            label_visibility="collapsed"
-        )
-
-        st.markdown("</div>", unsafe_allow_html=True)
-
-with f2:
-    nama_sheet = bulan_sheet[bulan]
-    url = f"https://docs.google.com/spreadsheets/d/{sheet_id}/gviz/tq?tqx=out:csv&sheet={nama_sheet}"
-
-    df = pd.read_csv(url)
-    df.columns = df.columns.str.strip() # Bersihkan nama kolom
-    df["Indikator"] = df["Indikator"].astype(str).str.strip() # Bersihkan kolom teks
-    df["Kabupaten"] = df["Kabupaten"].astype(str).str.strip()
-
-    df["Target"] = (
-        df["Target"]
-        .astype(str)
-        .str.replace("%", "", regex=False)
-        .str.replace(",", ".", regex=False)
-        .str.strip()
-    )
-    df["Target"] = pd.to_numeric(df["Target"], errors="coerce")
-
-    df["Realisasi"] = (
-        df["Realisasi"]
-        .astype(str)
-        .str.replace("%", "", regex=False)
-        .str.replace(",", ".", regex=False)
-        .str.strip()
-    )
-    df["Realisasi"] = pd.to_numeric(df["Realisasi"], errors="coerce")
-
-    df["Capaian"] = (
-        df["Capaian"]
-        .astype(str)
-        .str.replace("%", "", regex=False)
-        .str.replace(",", ".", regex=False)
-        .str.strip()
-    )
-    df["Capaian"] = pd.to_numeric(df["Capaian"], errors="coerce")
-
+    # kotak biru
     st.markdown("""
-    <div class="card">
+    <div class="card"></div>
     """, unsafe_allow_html=True)
+
+    # tulisan di luar kotak
     st.markdown("""
     <div style="
     font-size:30px;
     font-weight:700;
     color:#0B4EA2;
+    margin-top:15px;
+    margin-bottom:15px;">
+    📅 Pilih Bulan
+    </div>
+    """, unsafe_allow_html=True)
+
+    bulan = st.selectbox(
+        "",
+        list(bulan_sheet.keys()),
+        label_visibility="collapsed"
+    )
+
+    info_bulan = st.empty()
+
+# =====================================================
+# PILIH INDIKATOR
+# =====================================================
+with f2:
+
+    st.markdown("""
+    <div class="card"></div>
+    """, unsafe_allow_html=True)
+
+    st.markdown("""
+    <div style="
+    font-size:30px;
+    font-weight:700;
+    color:#0B4EA2;
+    margin-top:15px;
     margin-bottom:15px;">
     📊 Pilih Indikator
     </div>
     """, unsafe_allow_html=True)
 
-    indikator = st.selectbox(
-        "",
-        sorted(df["Indikator"].unique()),
-        label_visibility="collapsed"
+    indikator_prov = st.selectbox(
+        "Indikator Provinsi",
+        sorted(df["Indikator_Provinsi"].dropna().unique())
     )
 
-    st.markdown("</div>", unsafe_allow_html=True)
+    df_prov = df[
+        df["Indikator_Provinsi"] == indikator_prov
+    ]
+
+    indikator = st.selectbox(
+        "Indikator Kabupaten",
+        sorted(df_prov["Indikator"].dropna().unique())
+    )
 
 # =====================================================
 # FILTER DATA
 # =====================================================
-
-df_filter = df[
-    df["Indikator"] == indikator
-].copy()
-df_filter = df[
-    df["Indikator"] == indikator
+df_filter = df_prov[
+    df_prov["Indikator"] == indikator
 ].copy()
 
-df_filter["Capaian"] = df_filter["Capaian"].fillna(0)
+df_filter["Capaian"] = (
+    df_filter["Capaian"]
+    .astype(str)
+    .str.replace("%","", regex=False)
+    .str.replace(",",".", regex=False)
+)
 
+df_filter["Capaian"] = pd.to_numeric(
+    df_filter["Capaian"],
+    errors="coerce"
+).fillna(0)
+
+atas_target = (
+    df_filter["Capaian"] >= 100
+).sum()
+
+bawah_target = (
+    df_filter["Capaian"] < 100
+).sum()
+
+# MASUKKAN DI SINI
+with info_bulan.container():
+
+    st.markdown(f"""
+    <div style="
+    background:white;
+    padding:10px 14px;
+    border-radius:18px;
+    margin-top:12px;
+    box-shadow:0 6px 18px rgba(0,0,0,0.08);
+    border:1px solid #EDF1F7;
+    ">
+
+    <div style="
+    font-size:13px;
+    color:#2E7D32;
+    margin-bottom:6px;">
+    🏆 <b>{atas_target}</b> Kabupaten/Kota di atas target
+    </div>
+
+    <div style="
+    font-size:13px;
+    color:#D32F2F;">
+    📉 <b>{bawah_target}</b> Kabupaten/Kota di bawah target
+    </div>
+
+    </div>
+    """, unsafe_allow_html=True)
 # =====================================================
 # KPI
 # =====================================================
@@ -444,7 +472,18 @@ if total_target > 0:
         total_realisasi / total_target * 100,
         2
     )
-jumlah_kab = df_filter["Kabupaten"].nunique()
+
+jumlah_lapor = (
+    df_filter[
+        df_filter["Realisasi"].fillna(0) > 0
+    ]["Kabupaten"]
+    .nunique()
+)
+
+total_kab = (
+    df_filter["Kabupaten"]
+    .nunique()
+)
 
 k1, k2, k3, k4 = st.columns(4)
 
@@ -476,8 +515,8 @@ with k3:
 
 with k4:
     st.metric(
-        label="🏛️ Kabupaten/Kota",
-        value=f"{jumlah_kab}"
+        label="🏛️ Jumlah Kabupaten/Kota yang Lapor",
+        value=f"{jumlah_lapor}/{total_kab}"
     )
 
 st.markdown("<br>", unsafe_allow_html=True)
@@ -545,9 +584,11 @@ with left_chart:
         plot_bgcolor="white",
         legend_title="",
         legend=dict(
-            orientation="h",
-            y=1.12,
-            x=0.18
+        orientation="h",
+            y=-0.25,
+            x=0.5,
+            xanchor="center",
+            yanchor="top"
         ),
         margin=dict(
             l=20,
@@ -585,44 +626,81 @@ with right_chart:
     color:#0B4EA2;
     margin-bottom:15px;">
     📈 Persentase Capaian
-    </h4>
+    </div>
     """, unsafe_allow_html=True)
 
+    max_capaian = df_filter["Capaian"].max()
+
     fig2 = px.bar(
-        df_filter.sort_values("Capaian", ascending=True),
+        df_filter.sort_values(
+            by="Capaian",
+            ascending=True
+        ),
+
         x="Capaian",
         y="Kabupaten",
+
         orientation="h",
+
         text="Capaian",
+
         color="Capaian",
+
         color_continuous_scale="Blues"
     )
 
     fig2.update_traces(
+
         texttemplate="%{text:.1f}%",
         textposition="outside",
+
         cliponaxis=False
     )
 
+    # garis target 100%
+    fig2.add_vline(
+        x=100,
+        line_dash="dash",
+        line_color="red",
+        annotation_text="100%"
+    )
+
     fig2.update_layout(
+
+        coloraxis_showscale=False,
+
         height=420,
+
         paper_bgcolor="white",
         plot_bgcolor="white",
-        coloraxis_showscale=False,
+
         margin=dict(
-            l=70,
-            r=80,
-            t=30,
+            l=20,
+            r=20,
+            t=20,
             b=20
         ),
-        xaxis_title="Persentase (%)",
+
+        xaxis=dict(
+            title="Persentase (%)",
+            range=[
+                0,
+                max(
+                    100,
+                    max_capaian + 10
+                )
+            ]
+        ),
+
         yaxis_title=""
     )
 
     st.plotly_chart(
         fig2,
         use_container_width=True,
-        config={"displayModeBar": False}
+        config={
+            "displayModeBar": False
+        }
     )
 
 # ==========================================
