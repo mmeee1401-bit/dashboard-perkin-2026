@@ -562,9 +562,17 @@ with left_chart:
     </div>
     """, unsafe_allow_html=True)
     
-    st.caption(
-        f"ℹ️ Grafik menampilkan data kumulatif periode Januari–{bulan}."
-    )
+    st.markdown(f"""
+    <div style="
+    font-size:15px;
+    font-weight:500;
+    color:#1E4F9B;
+    margin-top:-3px;
+    margin-bottom:12px;">
+    ℹ️ Grafik menampilkan <b>data kumulatif</b> periode
+    <b>Januari–{bulan}</b>.
+    </div>
+    """, unsafe_allow_html=True)
 
     df_bar = pd.melt(
         df_filter,
@@ -641,6 +649,18 @@ with right_chart:
     color:#0B4EA2;
     margin-bottom:15px;">
     📈 Persentase Capaian
+    </div>
+    """, unsafe_allow_html=True)
+
+    st.markdown(f"""
+    <div style="
+    font-size:15px;
+    font-weight:500;
+    color:#1E4F9B;
+    margin-top:-3px;
+    margin-bottom:12px;">
+    ℹ️ Grafik menampilkan <b>data kumulatif</b> periode
+    <b>Januari–{bulan}</b>.
     </div>
     """, unsafe_allow_html=True)
 
