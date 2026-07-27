@@ -305,20 +305,17 @@ col1, col2 = st.columns([8,1])
 
 with col2:
     st.markdown("""
-    <a href="https://dashboard-perkin-utama.streamlit.app/" target="_self">
-        <button style="
-            width:100%;
-            background:#0B4EA2;
-            color:white;
-            border:none;
-            padding:12px;
-            border-radius:10px;
-            font-size:16px;
-            font-weight:600;
-            cursor:pointer;">
-            🏠 Beranda
-        </button>
+    <div style="margin-bottom:20px;">
+    <a href="https://dashboard-perkin-utama.streamlit.app/"
+    target="_self"
+    style="
+    text-decoration:none;
+    font-size:18px;
+    font-weight:600;
+    color:#0B4EA2;">
+    &#8592; Kembali ke Beranda Utama
     </a>
+    </div>
     """, unsafe_allow_html=True)
 
 col1, col2 = st.columns([8,4.5])
