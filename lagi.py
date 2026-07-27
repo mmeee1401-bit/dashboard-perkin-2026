@@ -3,6 +3,7 @@ import pandas as pd
 import plotly.express as px
 from io import BytesIO
 import requests
+import streamlit.components.v1 as components
 
 # =====================================================
 # PAGE CONFIG
@@ -301,22 +302,61 @@ df["Realisasi"] = pd.to_numeric(
 # HEADER
 # =====================================================
 
-col1, col2 = st.columns([8,1])
+st.markdown("""
+<style>
+
+/* BUTTON BERANDA */
+
+div.stButton > button{
+
+    width:100%;
+
+    background:linear-gradient(135deg,#0B4EA2,#2F80ED);
+
+    color:white;
+
+    border:none;
+
+    border-radius:12px;
+
+    padding:12px 18px;
+
+    font-size:16px;
+
+    font-weight:600;
+
+    transition:0.3s;
+
+    box-shadow:0 4px 12px rgba(11,78,162,.25);
+
+}
+
+div.stButton > button:hover{
+
+    background:linear-gradient(135deg,#09448d,#1976D2);
+
+    transform:translateY(-2px);
+
+    box-shadow:0 8px 18px rgba(11,78,162,.35);
+
+    color:white;
+
+}
+
+</style>
+""", unsafe_allow_html=True)
+
+col1, col2 = st.columns([8,2])
 
 with col2:
-    st.markdown("""
-    <div style="margin-bottom:20px;">
-    <a href="https://dashboard-perkin-utama.streamlit.app/"
-    target="_self"
-    style="
-    text-decoration:none;
-    font-size:18px;
-    font-weight:600;
-    color:#0B4EA2;">
-    &#8592; Kembali ke Beranda Utama
-    </a>
-    </div>
-    """, unsafe_allow_html=True)
+
+    if st.button("⬅ Kembali ke Beranda", use_container_width=True):
+
+        components.html("""
+        <script>
+            window.location.href="https://dashboard-perkin-utama.streamlit.app/";
+        </script>
+        """, height=0)
 
 col1, col2 = st.columns([8,4.5])
 
