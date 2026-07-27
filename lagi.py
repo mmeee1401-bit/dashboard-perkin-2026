@@ -301,17 +301,25 @@ df["Realisasi"] = pd.to_numeric(
 # HEADER
 # =====================================================
 
-col1, col2 = st.columns([8, 1])
-
-with col1:
-    st.title("📊 Dashboard PERKIN 2026")
+col1, col2 = st.columns([8,1])
 
 with col2:
-    st.link_button(
-        "🏠 Beranda",
-        "https://dashboard-perkin-utama.streamlit.app/",
-        use_container_width=True
-    )
+    st.markdown("""
+    <a href="https://dashboard-perkin-utama.streamlit.app/" target="_self">
+        <button style="
+            width:100%;
+            background:#0B4EA2;
+            color:white;
+            border:none;
+            padding:12px;
+            border-radius:10px;
+            font-size:16px;
+            font-weight:600;
+            cursor:pointer;">
+            🏠 Beranda
+        </button>
+    </a>
+    """, unsafe_allow_html=True)
 
 col1, col2 = st.columns([8,4.5])
 
