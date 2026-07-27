@@ -470,20 +470,35 @@ with info_bulan.container():
 
     </div>
     """, unsafe_allow_html=True)
+    
 # =====================================================
 # KPI
 # =====================================================
 
-total_target = df_filter["Target"].sum()
+jumlah_kab = df_filter["Kabupaten"].nunique()
+
+# Rata-rata target Kabupaten/Kota
+if jumlah_kab > 0:
+    total_target = round(
+        df_filter["Target"].sum() / jumlah_kab,
+        2
+    )
+else:
+    total_target = 0
+
+# Total realisasi seluruh Kabupaten/Kota
 total_realisasi = df_filter["Realisasi"].sum()
+
+# Persentase capaian
 persen = 0
 
 if total_target > 0:
     persen = round(
-        total_realisasi / total_target * 100,
+        (total_realisasi / total_target) * 100,
         2
     )
 
+# Jumlah Kabupaten/Kota yang sudah melapor
 jumlah_lapor = (
     df_filter[
         df_filter["Realisasi"].fillna(0) > 0
@@ -491,12 +506,13 @@ jumlah_lapor = (
     .nunique()
 )
 
-total_kab = (
-    df_filter["Kabupaten"]
-    .nunique()
-)
+# Total Kabupaten/Kota
+total_kab = df_filter["Kabupaten"].nunique()
 
+# Layout KPI
 k1, k2, k3, k4 = st.columns(4)
+
+
 
 # =====================================================
 # KPI
@@ -507,8 +523,8 @@ k1, k2, k3, k4 = st.columns(4)
 with k1:
     st.metric(
         label="🎯 Total Target",
-        value=f"{total_target:,.0f}",
-        help="Total target pada indikator yang dipilih"
+        value=f"{total_target:.2f}",
+        help="Nilai yang ditampilkan merupakan rata-rata target Kabupaten/Kota pada indikator yang dipilih."
     )
 
 with k2:
