@@ -647,7 +647,7 @@ with right_chart:
     font-size:30px;
     font-weight:700;
     color:#0B4EA2;
-    margin-bottom:15px;">
+    margin-bottom:5px;">
     📈 Persentase Capaian
     </div>
     """, unsafe_allow_html=True)
