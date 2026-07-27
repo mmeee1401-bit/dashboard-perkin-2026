@@ -552,6 +552,20 @@ left_chart, right_chart = st.columns([1.4, 1])
 
 with left_chart:
 
+bulan_terpilih = bulan
+st.markdown(f"""
+<div style="
+background:#F8FBFF;
+border-left:5px solid #2F80ED;
+padding:12px 16px;
+border-radius:10px;
+margin-bottom:18px;
+font-size:15px;
+color:#374151;">
+ℹ️ <b>Keterangan:</b> Grafik berikut menampilkan <b>data kumulatif</b> dari bulan <b>Januari</b> sampai <b>{bulan_terpilih}</b>. Data akan diperbarui secara otomatis sesuai perkembangan laporan pada bulan yang dipilih.
+</div>
+""", unsafe_allow_html=True)
+
     st.markdown("""
     <div style="
     font-size:30px;
