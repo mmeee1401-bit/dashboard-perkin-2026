@@ -550,32 +550,21 @@ left_chart, right_chart = st.columns([1.4, 1])
 # GRAFIK TARGET VS REALISASI
 # =====================================================
 
-with left_chart:
+    with left_chart:
 
-st.markdown("""
-<div style="
-font-size:30px;
-font-weight:700;
-color:#0B4EA2;
-margin-bottom:5px;">
-📊 Target vs Realisasi
-</div>
-""", unsafe_allow_html=True)
-
-st.caption(
-    f"ℹ️ Grafik menampilkan data kumulatif periode Januari–{bulan}."
-)
-
-    # Judul Grafik
     st.markdown("""
     <div style="
     font-size:30px;
     font-weight:700;
     color:#0B4EA2;
-    margin-bottom:15px;">
+    margin-bottom:5px;">
     📊 Target vs Realisasi
     </div>
     """, unsafe_allow_html=True)
+    
+    st.caption(
+        f"ℹ️ Grafik menampilkan data kumulatif periode Januari–{bulan}."
+    )
 
     df_bar = pd.melt(
         df_filter,
