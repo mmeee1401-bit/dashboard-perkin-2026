@@ -550,7 +550,7 @@ left_chart, right_chart = st.columns([1.4, 1])
 # GRAFIK TARGET VS REALISASI
 # =====================================================
 
-    with left_chart:
+with left_chart:
 
     st.markdown("""
     <div style="
