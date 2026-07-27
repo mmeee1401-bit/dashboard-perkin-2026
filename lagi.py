@@ -552,20 +552,31 @@ left_chart, right_chart = st.columns([1.4, 1])
 
 with left_chart:
 
-bulan_terpilih = bulan
-st.markdown(f"""
-<div style="
-background:#F8FBFF;
-border-left:5px solid #2F80ED;
-padding:12px 16px;
-border-radius:10px;
-margin-bottom:18px;
-font-size:15px;
-color:#374151;">
-ℹ️ <b>Keterangan:</b> Grafik berikut menampilkan <b>data kumulatif</b> dari bulan <b>Januari</b> sampai <b>{bulan_terpilih}</b>. Data akan diperbarui secara otomatis sesuai perkembangan laporan pada bulan yang dipilih.
-</div>
-""", unsafe_allow_html=True)
+    # Menentukan rentang bulan kumulatif
+    daftar_bulan = list(bulan_sheet.keys())
+    idx = daftar_bulan.index(bulan)
+    rentang_bulan = f"{daftar_bulan[0]} - {daftar_bulan[idx]}"
 
+    # Keterangan grafik
+    st.markdown(f"""
+    <div style="
+    background:#F8FBFF;
+    border-left:5px solid #2F80ED;
+    padding:12px 16px;
+    border-radius:12px;
+    margin-bottom:20px;
+    box-shadow:0 4px 10px rgba(0,0,0,0.05);
+    font-size:15px;
+    color:#374151;
+    line-height:1.6;">
+    ℹ️ <b>Keterangan:</b><br>
+    Grafik berikut menampilkan <b>data kumulatif</b> periode
+    <b>{rentang_bulan}</b>. Nilai Target, Realisasi, dan Capaian merupakan
+    akumulasi pelaporan hingga bulan yang dipilih.
+    </div>
+    """, unsafe_allow_html=True)
+
+    # Judul Grafik
     st.markdown("""
     <div style="
     font-size:30px;
