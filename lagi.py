@@ -350,13 +350,11 @@ col1, col2 = st.columns([8,2])
 
 with col2:
 
-    if st.button("⬅ Kembali ke Beranda", use_container_width=True):
-
-        components.html("""
-        <script>
-            window.location.href="https://dashboard-perkin-utama.streamlit.app/";
-        </script>
-        """, height=0)
+st.link_button(
+    "⬅ Kembali ke Beranda",
+    "https://dashboard-perkin-utama.streamlit.app/",
+    use_container_width=True
+)
 
 col1, col2 = st.columns([8,4.5])
 
