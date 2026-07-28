@@ -350,11 +350,11 @@ col1, col2 = st.columns([8,2])
 
 with col2:
 
-st.link_button(
-    "⬅ Kembali ke Beranda",
-    "https://dashboard-perkin-utama.streamlit.app/",
-    use_container_width=True
-)
+    st.link_button(
+        "⬅ Kembali ke Beranda",
+        "https://dashboard-perkin-utama.streamlit.app/",
+        use_container_width=True
+    )
 
 col1, col2 = st.columns([8,4.5])
 
