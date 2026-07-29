@@ -679,7 +679,7 @@ with right_chart:
 # =====================================================
 
 st.markdown('<br>', unsafe_allow_html=True)
-st.markdown(f'<div class="section-title-text">📍 Peta Capaian per Kabupaten/Kota <span style="font-size:14px; color:#64748B; font-weight:500;">(Periode {bulan})</span></div>', unsafe_allow_html=True)
+st.markdown(f'<div class="section-title-text">📍 Peta Capaian per Kabupaten/Kota <span style="font-size:14px; color:#64748B; font-weight:500;">(Periode <b>Januari–{bulan})</span></div>', unsafe_allow_html=True)
 st.markdown('<div class="section-subtitle-text">Hover / Sentuh titik wilayah pada peta untuk melihat detail target dan realisasi</div>', unsafe_allow_html=True)
 
 map_col, info_map_col = st.columns([2.3, 1])
