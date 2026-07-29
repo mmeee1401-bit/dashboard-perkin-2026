@@ -548,7 +548,10 @@ with info_bulan.container():
 jumlah_kab = df_filter["Kabupaten"].nunique()
 total_target = round(df_filter["Target"].sum() / jumlah_kab, 2) if jumlah_kab > 0 else 0
 total_realisasi = df_filter["Realisasi"].sum()
-persen = round((total_realisasi / total_target) * 100, 2) if total_target > 0 else 0
+persen = round(
+    ((df_filter["Realisasi"] / df_filter["Target"]) * 100).sum() / 7,
+    2
+)
 jumlah_lapor = df_filter[df_filter["Realisasi"].fillna(0) > 0]["Kabupaten"].nunique()
 total_kab = df_filter["Kabupaten"].nunique()
 
