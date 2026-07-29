@@ -282,6 +282,112 @@ div[data-testid="stMetricValue"] {
     font-weight: 500;
 }
 
+/* ===================================
+FILTER CARD
+=================================== */
+
+.filter-card{
+
+    background:#FFFFFF;
+
+    border-radius:22px;
+
+    padding:22px;
+
+    border:1px solid #DCE6F3;
+
+    box-shadow:
+        0 10px 28px rgba(11,78,162,.10);
+
+    margin-bottom:20px;
+
+    position:relative;
+
+    overflow:hidden;
+
+}
+
+/* Garis atas */
+
+.filter-card::before{
+
+content:"";
+
+position:absolute;
+
+left:0;
+
+top:0;
+
+width:100%;
+
+height:6px;
+
+background:linear-gradient(
+90deg,
+#0B4EA2,
+#42A5F5);
+
+}
+
+/* ===================================
+JUDUL
+=================================== */
+
+.section-title-text{
+
+    font-size:24px;
+
+    font-weight:800;
+
+    color:#0B4EA2;
+
+    margin-bottom:18px;
+
+    display:flex;
+
+    align-items:center;
+
+    gap:8px;
+
+}
+
+/* ===================================
+SUMMARY
+=================================== */
+
+.summary-card{
+
+    margin-top:18px;
+
+    padding:14px 18px;
+
+    border-radius:16px;
+
+    background:#F8FBFF;
+
+    border:1px solid #E4EDF8;
+
+}
+
+.summary-green{
+
+    color:#15803D;
+
+    font-weight:600;
+
+    margin-bottom:8px;
+
+}
+
+.summary-red{
+
+    color:#DC2626;
+
+    font-weight:600;
+
+}
+
 /* TOMBOL AKSI LAPORAN & DOWNLOAD: BIRU SOLID EFEK TIMBUL 3D */
 div.stLinkButton > a[href*="sheet"],
 div.stDownloadButton > button {
@@ -401,78 +507,167 @@ st.markdown(hero_html, unsafe_allow_html=True)
 # FILTER SECTION (PILIH BULAN & INDIKATOR - PRESERVED)
 # =====================================================
 
+# =====================================================
+# FILTER SECTION
+# =====================================================
+
 f1, f2 = st.columns(2)
 
+# =====================================================
 # PILIH BULAN
+# =====================================================
+
 with f1:
-    st.markdown("""<div class="section-title-text">📅 Pilih Bulan</div>""", unsafe_allow_html=True)
+
+    st.markdown("""
+    <div class="filter-card">
+        <div class="section-title-text">
+            📅 Pilih Bulan
+        </div>
+    """, unsafe_allow_html=True)
 
     bulan = st.selectbox(
         "",
         list(bulan_sheet.keys()),
         label_visibility="collapsed"
     )
-    info_bulan = st.empty()
 
-# LOAD DATA DARI GOOGLE SHEETS
+# =====================================================
+# LOAD DATA
+# =====================================================
+
 nama_sheet = bulan_sheet[bulan]
+
 url = f"https://docs.google.com/spreadsheets/d/{sheet_id}/gviz/tq?tqx=out:csv&sheet={nama_sheet}"
 
 try:
+
     df = pd.read_csv(url)
+
     df.columns = df.columns.str.strip()
+
     df["Indikator"] = df["Indikator"].astype(str).str.strip()
+
     df["Kabupaten"] = df["Kabupaten"].astype(str).str.strip()
+
     df["Target"] = pd.to_numeric(df["Target"], errors="coerce").fillna(0)
+
     df["Realisasi"] = pd.to_numeric(df["Realisasi"], errors="coerce").fillna(0)
+
 except Exception:
+
     df = pd.DataFrame([
-        {"Indikator_Provinsi": "Keluarga Berencana", "Indikator": "Persentase Peserta KB Aktif", "Kabupaten": "Bangka", "Target": 90.0, "Realisasi": 88.0, "Capaian": 97.78},
-        {"Indikator_Provinsi": "Keluarga Berencana", "Indikator": "Persentase Peserta KB Aktif", "Kabupaten": "Belitung", "Target": 90.0, "Realisasi": 90.0, "Capaian": 100.00},
-        {"Indikator_Provinsi": "Keluarga Berencana", "Indikator": "Persentase Peserta KB Aktif", "Kabupaten": "Bangka Selatan", "Target": 90.0, "Realisasi": 85.0, "Capaian": 94.44},
-        {"Indikator_Provinsi": "Keluarga Berencana", "Indikator": "Persentase Peserta KB Aktif", "Kabupaten": "Bangka Tengah", "Target": 90.0, "Realisasi": 93.0, "Capaian": 103.33},
-        {"Indikator_Provinsi": "Keluarga Berencana", "Indikator": "Persentase Peserta KB Aktif", "Kabupaten": "Bangka Barat", "Target": 90.0, "Realisasi": 95.0, "Capaian": 105.56},
-        {"Indikator_Provinsi": "Keluarga Berencana", "Indikator": "Persentase Peserta KB Aktif", "Kabupaten": "Belitung Timur", "Target": 90.0, "Realisasi": 92.0, "Capaian": 102.22},
-        {"Indikator_Provinsi": "Keluarga Berencana", "Indikator": "Persentase Peserta KB Aktif", "Kabupaten": "Pangkalpinang", "Target": 90.0, "Realisasi": 75.0, "Capaian": 83.33},
+        {
+            "Indikator_Provinsi":"Keluarga Berencana",
+            "Indikator":"Persentase Peserta KB Aktif",
+            "Kabupaten":"Bangka",
+            "Target":90,
+            "Realisasi":88,
+            "Capaian":97.78
+        }
     ])
 
+# =====================================================
 # PILIH INDIKATOR
+# =====================================================
+
 with f2:
-    st.markdown("""<div class="section-title-text">📊 Pilih Indikator</div>""", unsafe_allow_html=True)
 
-    prov_opts = sorted(df["Indikator_Provinsi"].dropna().unique()) if "Indikator_Provinsi" in df.columns else ["Keluarga Berencana"]
-    indikator_prov = st.selectbox("Indikator Provinsi", prov_opts)
+    st.markdown("""
+    <div class="filter-card">
 
-    df_prov = df[df["Indikator_Provinsi"] == indikator_prov] if "Indikator_Provinsi" in df.columns else df
+        <div class="section-title-text">
+            📊 Pilih Indikator
+        </div>
 
-    kab_opts = sorted(df_prov["Indikator"].dropna().unique())
-    indikator = st.selectbox("Indikator Kabupaten", kab_opts)
+    """, unsafe_allow_html=True)
 
-# FILTER DATA SESUAI SELEKSI
-df_filter = df_prov[df_prov["Indikator"] == indikator].copy()
-
-if "Capaian" in df_filter.columns:
-    df_filter["Capaian"] = (
-        df_filter["Capaian"]
-        .astype(str)
-        .str.replace("%","", regex=False)
-        .str.replace(",",".", regex=False)
+    prov_opts = sorted(
+        df["Indikator_Provinsi"].dropna().unique()
     )
-    df_filter["Capaian"] = pd.to_numeric(df_filter["Capaian"], errors="coerce").fillna(0)
-else:
-    df_filter["Capaian"] = (df_filter["Realisasi"] / df_filter["Target"].replace(0, 1)) * 100
 
-atas_target = (df_filter["Capaian"] >= 100).sum()
-bawah_target = (df_filter["Capaian"] < 100).sum()
+    indikator_prov = st.selectbox(
+        "Indikator Provinsi",
+        prov_opts
+    )
 
-with info_bulan.container():
-    st.markdown(f"""
-    <div style="background:#FFFFFF; padding:12px 16px; border-radius:16px; margin-top:12px; border:1.5px solid #E2E8F0; box-shadow:0 6px 18px rgba(0,0,0,0.05);">
-        <div style="font-size:13.5px; color:#15803D; margin-bottom:4px;">🏆 <b>{atas_target}</b> Kabupaten/Kota di atas target</div>
-        <div style="font-size:13.5px; color:#DC2626;">📉 <b>{bawah_target}</b> Kabupaten/Kota di bawah target</div>
+    df_prov = df[
+        df["Indikator_Provinsi"] == indikator_prov
+    ]
+
+    kab_opts = sorted(
+        df_prov["Indikator"].dropna().unique()
+    )
+
+    indikator = st.selectbox(
+        "Indikator Kabupaten",
+        kab_opts
+    )
+
+    st.markdown("""
     </div>
     """, unsafe_allow_html=True)
 
+# =====================================================
+# FILTER DATA
+# =====================================================
+
+df_filter = df_prov[
+    df_prov["Indikator"] == indikator
+].copy()
+
+if "Capaian" in df_filter.columns:
+
+    df_filter["Capaian"] = (
+        df_filter["Capaian"]
+        .astype(str)
+        .str.replace("%","",regex=False)
+        .str.replace(",",".",regex=False)
+    )
+
+    df_filter["Capaian"] = pd.to_numeric(
+        df_filter["Capaian"],
+        errors="coerce"
+    ).fillna(0)
+
+else:
+
+    df_filter["Capaian"] = (
+        df_filter["Realisasi"] /
+        df_filter["Target"].replace(0,1)
+    ) * 100
+
+atas_target = (df_filter["Capaian"] >= 100).sum()
+
+bawah_target = (df_filter["Capaian"] < 100).sum()
+
+# =====================================================
+# INFO BULAN
+# =====================================================
+
+with f1:
+
+    st.markdown(f"""
+
+    <div class="summary-card">
+
+        <div class="summary-green">
+
+            🏆 <b>{atas_target}</b> Kabupaten/Kota di atas target
+
+        </div>
+
+        <div class="summary-red">
+
+            📉 <b>{bawah_target}</b> Kabupaten/Kota di bawah target
+
+        </div>
+
+    </div>
+
+    </div>
+
+    """, unsafe_allow_html=True)
 # =====================================================
 # HITUNG METRIK KPI & LAYOUT KPI CARDS
 # =====================================================
