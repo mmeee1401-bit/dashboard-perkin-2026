@@ -7,12 +7,7 @@ import requests
 import base64
 import os
 
-# =====================================================
-# PAGE CONFIG
-# =====================================================
-st.set_page_config(
-    page_title="Dashboard PERKIN 2026",
-    page_icon="📊",
+# =============================================
     layout="wide",
     initial_sidebar_state="collapsed"
 )
@@ -682,43 +677,76 @@ with right_chart:
 # =====================================================
 
 st.markdown(
-    f'''
+    f"""
     <div class="section-title-text">
         📍 Peta Capaian per Kabupaten/Kota
         <span style="font-size:14px; color:#64748B; font-weight:500;">
-            (Tahun 2023)
+            (Periode Januari–{bulan})
         </span>
     </div>
-    ''',
+    """,
     unsafe_allow_html=True
 )
 
 st.markdown(
-    '''
+    """
     <div class="section-subtitle-text">
         Hover / Sentuh titik wilayah pada peta untuk melihat detail target dan realisasi
     </div>
-    ''',
+    """,
     unsafe_allow_html=True
 )
 
 map_col, info_map_col = st.columns([2.3, 1])
+
 
 # =====================================================
 # KOORDINAT 7 KABUPATEN/KOTA BABEL
 # =====================================================
 
 geo_babel = pd.DataFrame([
-    {"Kabupaten": "Pangkalpinang", "lat": -2.130, "lon": 106.110},
-    {"Kabupaten": "Bangka", "lat": -1.860, "lon": 106.110},
-    {"Kabupaten": "Bangka Barat", "lat": -1.900, "lon": 105.450},
-    {"Kabupaten": "Bangka Tengah", "lat": -2.350, "lon": 106.100},
-    {"Kabupaten": "Bangka Selatan", "lat": -2.850, "lon": 106.250},
-    {"Kabupaten": "Belitung", "lat": -2.750, "lon": 107.750},
-    {"Kabupaten": "Belitung Timur", "lat": -2.850, "lon": 108.150},
+    {
+        "Kabupaten": "Pangkalpinang",
+        "lat": -2.130,
+        "lon": 106.110
+    },
+    {
+        "Kabupaten": "Bangka",
+        "lat": -1.860,
+        "lon": 106.110
+    },
+    {
+        "Kabupaten": "Bangka Barat",
+        "lat": -1.900,
+        "lon": 105.450
+    },
+    {
+        "Kabupaten": "Bangka Tengah",
+        "lat": -2.350,
+        "lon": 106.100
+    },
+    {
+        "Kabupaten": "Bangka Selatan",
+        "lat": -2.850,
+        "lon": 106.250
+    },
+    {
+        "Kabupaten": "Belitung",
+        "lat": -2.750,
+        "lon": 107.750
+    },
+    {
+        "Kabupaten": "Belitung Timur",
+        "lat": -2.850,
+        "lon": 108.150
+    }
 ])
 
-# Gabungkan koordinat dengan data indikator
+
+# =====================================================
+# GABUNGKAN KOORDINAT DENGAN DATA
+# =====================================================
+
 df_map = pd.merge(
     geo_babel,
     df_filter,
@@ -726,32 +754,50 @@ df_map = pd.merge(
     how="left"
 )
 
-# Isi data kosong
-df_map["Capaian"] = df_map["Capaian"].fillna(0)
-df_map["Realisasi"] = df_map["Realisasi"].fillna(0)
-df_map["Target"] = df_map["Target"].fillna(0)
+
+# =====================================================
+# BERSIHKAN DATA
+# =====================================================
+
+df_map["Target"] = pd.to_numeric(
+    df_map["Target"],
+    errors="coerce"
+).fillna(0)
+
+df_map["Realisasi"] = pd.to_numeric(
+    df_map["Realisasi"],
+    errors="coerce"
+).fillna(0)
+
+df_map["Capaian"] = pd.to_numeric(
+    df_map["Capaian"],
+    errors="coerce"
+).fillna(0)
+
 
 # =====================================================
 # KATEGORI STATUS
 # =====================================================
 
-kategori_list = []
+def kategori_capaian(capaian):
 
-for cap in df_map["Capaian"]:
+    if capaian >= 100:
+        return "Sangat Baik (≥100%)"
 
-    if cap >= 100:
-        kategori_list.append("Sangat Baik (≥100%)")
+    elif capaian >= 80:
+        return "Baik (80%-99.9%)"
 
-    elif cap >= 80:
-        kategori_list.append("Baik (80%-99.9%)")
-
-    elif cap >= 60:
-        kategori_list.append("Cukup (60%-79.9%)")
+    elif capaian >= 60:
+        return "Cukup (60%-79.9%)"
 
     else:
-        kategori_list.append("Kurang (<60%)")
+        return "Kurang (<60%)"
 
-df_map["Kategori_Status"] = kategori_list
+
+df_map["Kategori_Status"] = df_map["Capaian"].apply(
+    kategori_capaian
+)
+
 
 # =====================================================
 # PETA
@@ -759,51 +805,96 @@ df_map["Kategori_Status"] = kategori_list
 
 with map_col:
 
-    fig_map = px.scatter_map(
-    df_map,
+    fig_map = px.scatter_geo(
+        df_map,
 
-    lat="lat",
-    lon="lon",
+        lat="lat",
+        lon="lon",
 
-    hover_name="Kabupaten",
+        scope="asia",
 
-    hover_data={
-        "Capaian": ":.1f",
-        "Realisasi": ":.1f",
-        "Target": ":.1f",
-        "lat": False,
-        "lon": False,
-        "Kategori_Status": True
-    },
+        projection="mercator",
 
-    color="Kategori_Status",
+        color="Kategori_Status",
 
-    color_discrete_map={
-        "Sangat Baik (≥100%)": "#10B981",
-        "Baik (80%-99.9%)": "#3B82F6",
-        "Cukup (60%-79.9%)": "#F59E0B",
-        "Kurang (<60%)": "#EF4444"
-    },
+        hover_name="Kabupaten",
 
-    zoom=7.4,
+        hover_data={
+            "Target": ":.1f",
+            "Realisasi": ":.1f",
+            "Capaian": ":.1f",
+            "Kategori_Status": True,
+            "lat": False,
+            "lon": False
+        },
 
-    center={
-        "lat": -2.4,
-        "lon": 106.8
-    },
+        color_discrete_map={
+            "Sangat Baik (≥100%)": "#10B981",
+            "Baik (80%-99.9%)": "#3B82F6",
+            "Cukup (60%-79.9%)": "#F59E0B",
+            "Kurang (<60%)": "#EF4444"
+        }
+    )
 
-    map_style="open-street-map"
-)
+
+    # =================================================
+    # TITIK PETA
+    # =================================================
 
     fig_map.update_traces(
         marker=dict(
-            size=24,
-            opacity=0.95
+            size=18,
+            opacity=0.95,
+            line=dict(
+                width=2,
+                color="white"
+            )
         )
     )
 
+
+    # =================================================
+    # TAMPILAN PETA
+    # =================================================
+
+    fig_map.update_geos(
+        showland=True,
+        landcolor="#E8F1F8",
+
+        showocean=True,
+        oceancolor="#DCEEFF",
+
+        showcountries=True,
+        countrycolor="#94A3B8",
+
+        showcoastlines=True,
+        coastlinecolor="#64748B",
+
+        showlakes=True,
+        lakecolor="#DCEEFF",
+
+        center=dict(
+            lat=-2.4,
+            lon=106.8
+        ),
+
+        lataxis_range=[
+            -3.3,
+            -1.4
+        ],
+
+        lonaxis_range=[
+            104.9,
+            108.7
+        ]
+    )
+
+
+    # =================================================
+    # LAYOUT
+    # =================================================
+
     fig_map.update_layout(
-        map_style="open-street-map",
 
         height=430,
 
@@ -816,8 +907,25 @@ with map_col:
 
         paper_bgcolor="white",
 
-        legend_title="Kategori Kinerja"
+        plot_bgcolor="white",
+
+        legend=dict(
+            title="Kategori Kinerja",
+            orientation="v",
+            y=0.98,
+            x=0.02,
+            xanchor="left",
+            yanchor="top",
+            bgcolor="rgba(255,255,255,0.9)",
+            bordercolor="#CBD5E1",
+            borderwidth=1
+        )
     )
+
+
+    # =================================================
+    # TAMPILKAN
+    # =================================================
 
     st.plotly_chart(
         fig_map,
@@ -826,6 +934,7 @@ with map_col:
             "displayModeBar": False
         }
     )
+
 
 # =====================================================
 # INFO LEGEND
@@ -858,8 +967,8 @@ with info_map_col:
                 line-height:1.7;
                 margin-bottom:14px;
             ">
-                Titik warna pada peta mewakili besaran
-                persentase capaian indikator di
+                Titik pada peta mewakili besaran
+                persentase capaian indikator pada
                 7 Kabupaten/Kota se-Provinsi Babel.
             </div>
 
@@ -884,13 +993,21 @@ with info_map_col:
                 line-height:2.2;
             ">
 
-                <div>🟢 <b>Sangat Baik (≥ 100%)</b></div>
+                <div>
+                    🟢 <b>Sangat Baik (≥ 100%)</b>
+                </div>
 
-                <div>🔵 <b>Baik (80% - 99,99%)</b></div>
+                <div>
+                    🔵 <b>Baik (80% - 99,99%)</b>
+                </div>
 
-                <div>🟡 <b>Cukup (60% - 79,99%)</b></div>
+                <div>
+                    🟡 <b>Cukup (60% - 79,99%)</b>
+                </div>
 
-                <div>🔴 <b>Kurang (&lt; 60%)</b></div>
+                <div>
+                    🔴 <b>Kurang (&lt; 60%)</b>
+                </div>
 
             </div>
 
