@@ -678,16 +678,36 @@ with right_chart:
     st.plotly_chart(fig2, use_container_width=True, config={"displayModeBar": False})
 
 # =====================================================
-# SPATIAL MAPPING (PETA DIGITAL DIPERJELAS & WARNA DIPERTEGAS)
+# SPATIAL MAPPING
 # =====================================================
 
-st.markdown('<br>', unsafe_allow_html=True)
-st.markdown(f'<div class="section-title-text">📍 Peta Capaian per Kabupaten/Kota <span style="font-size:14px; color:#64748B; font-weight:500;">(Periode <b>Januari–{bulan})</span></div>', unsafe_allow_html=True)
-st.markdown('<div class="section-subtitle-text">Hover / Sentuh titik wilayah pada peta untuk melihat detail target dan realisasi</div>', unsafe_allow_html=True)
+st.markdown(
+    f'''
+    <div class="section-title-text">
+        📍 Peta Capaian per Kabupaten/Kota
+        <span style="font-size:14px; color:#64748B; font-weight:500;">
+            (Tahun 2023)
+        </span>
+    </div>
+    ''',
+    unsafe_allow_html=True
+)
+
+st.markdown(
+    '''
+    <div class="section-subtitle-text">
+        Hover / Sentuh titik wilayah pada peta untuk melihat detail target dan realisasi
+    </div>
+    ''',
+    unsafe_allow_html=True
+)
 
 map_col, info_map_col = st.columns([2.3, 1])
 
-# Data Koordinat Presisi 7 Kab/Kota Bangka Belitung
+# =====================================================
+# KOORDINAT 7 KABUPATEN/KOTA BABEL
+# =====================================================
+
 geo_babel = pd.DataFrame([
     {"Kabupaten": "Pangkalpinang", "lat": -2.130, "lon": 106.110},
     {"Kabupaten": "Bangka", "lat": -1.860, "lon": 106.110},
@@ -698,81 +718,184 @@ geo_babel = pd.DataFrame([
     {"Kabupaten": "Belitung Timur", "lat": -2.850, "lon": 108.150},
 ])
 
-df_map = pd.merge(geo_babel, df_filter, on="Kabupaten", how="left")
+# Gabungkan koordinat dengan data indikator
+df_map = pd.merge(
+    geo_babel,
+    df_filter,
+    on="Kabupaten",
+    how="left"
+)
+
+# Isi data kosong
 df_map["Capaian"] = df_map["Capaian"].fillna(0)
 df_map["Realisasi"] = df_map["Realisasi"].fillna(0)
 df_map["Target"] = df_map["Target"].fillna(0)
 
-# Menentukan Kategori Warna Titik Peta
+# =====================================================
+# KATEGORI STATUS
+# =====================================================
+
 kategori_list = []
-color_code_list = []
+
 for cap in df_map["Capaian"]:
+
     if cap >= 100:
         kategori_list.append("Sangat Baik (≥100%)")
-        color_code_list.append("#10B981")
+
     elif cap >= 80:
         kategori_list.append("Baik (80%-99.9%)")
-        color_code_list.append("#3B82F6")
+
     elif cap >= 60:
         kategori_list.append("Cukup (60%-79.9%)")
-        color_code_list.append("#F59E0B")
+
     else:
         kategori_list.append("Kurang (<60%)")
-        color_code_list.append("#EF4444")
 
 df_map["Kategori_Status"] = kategori_list
-df_map["Color_Code"] = color_code_list
+
+# =====================================================
+# PETA
+# =====================================================
 
 with map_col:
-    # Peta Scatter Plotly dengan Titik Terang & Jelas
-    fig_map = px.scatter_mapbox(
+
+    fig_map = px.scatter_map(
         df_map,
+
         lat="lat",
         lon="lon",
+
         hover_name="Kabupaten",
-        hover_data={"Capaian": ":.1f%", "Realisasi": ":.1f", "Target": ":.1f", "lat": False, "lon": False, "Kategori_Status": True},
+
+        hover_data={
+            "Capaian": ":.1f",
+            "Realisasi": ":.1f",
+            "Target": ":.1f",
+            "lat": False,
+            "lon": False,
+            "Kategori_Status": True
+        },
+
         color="Kategori_Status",
+
         color_discrete_map={
             "Sangat Baik (≥100%)": "#10B981",
             "Baik (80%-99.9%)": "#3B82F6",
             "Cukup (60%-79.9%)": "#F59E0B",
             "Kurang (<60%)": "#EF4444"
         },
+
         zoom=7.4,
-        center={"lat": -2.4, "lon": 106.8}
+
+        center={
+            "lat": -2.4,
+            "lon": 106.8
+        }
     )
 
     fig_map.update_traces(
-        marker=dict(size=24, opacity=0.95)
+        marker=dict(
+            size=24,
+            opacity=0.95
+        )
     )
 
     fig_map.update_layout(
-        mapbox_style="open-street-map",
+        map_style="open-street-map",
+
         height=430,
-        margin=dict(l=0, r=0, t=0, b=0),
+
+        margin=dict(
+            l=0,
+            r=0,
+            t=0,
+            b=0
+        ),
+
         paper_bgcolor="white",
+
         legend_title="Kategori Kinerja"
     )
 
-    st.plotly_chart(fig_map, use_container_width=True)
+    st.plotly_chart(
+        fig_map,
+        use_container_width=True,
+        config={
+            "displayModeBar": False
+        }
+    )
+
+# =====================================================
+# INFO LEGEND
+# =====================================================
 
 with info_map_col:
-    st.markdown("""
-    <div style="background:#FFFFFF; border:1.5px solid #CBD5E1; border-radius:18px; padding:20px; box-shadow:0 8px 22px rgba(0,0,0,0.05);">
-        <div style="font-size:15px; font-weight:800; color:#0B4EA2; margin-bottom:10px;">🟢 Legend & Kategori Wilayah</div>
-        <div style="font-size:13px; color:#475569; line-height:1.7; margin-bottom:14px;">
-            Titik warna pada peta mewakili besaran persentase capaian indikator di 7 Kabupaten/Kota se-Provinsi Babel.
+
+    st.markdown(
+        """
+        <div style="
+            background:#FFFFFF;
+            border:1.5px solid #CBD5E1;
+            border-radius:18px;
+            padding:20px;
+            box-shadow:0 8px 22px rgba(0,0,0,0.05);
+        ">
+
+            <div style="
+                font-size:15px;
+                font-weight:800;
+                color:#0B4EA2;
+                margin-bottom:10px;
+            ">
+                📍 Legend & Kategori Wilayah
+            </div>
+
+            <div style="
+                font-size:13px;
+                color:#475569;
+                line-height:1.7;
+                margin-bottom:14px;
+            ">
+                Titik warna pada peta mewakili besaran
+                persentase capaian indikator di
+                7 Kabupaten/Kota se-Provinsi Babel.
+            </div>
+
+            <hr style="
+                border:none;
+                border-top:1px solid #E2E8F0;
+                margin:14px 0;
+            ">
+
+            <div style="
+                font-size:13px;
+                font-weight:700;
+                color:#0F172A;
+                margin-bottom:10px;
+            ">
+                Status Kategori Warna:
+            </div>
+
+            <div style="
+                font-size:12.5px;
+                color:#334155;
+                line-height:2.2;
+            ">
+
+                <div>🟢 <b>Sangat Baik (≥ 100%)</b></div>
+
+                <div>🔵 <b>Baik (80% - 99,99%)</b></div>
+
+                <div>🟡 <b>Cukup (60% - 79,99%)</b></div>
+
+                <div>🔴 <b>Kurang (&lt; 60%)</b></div>
+
+            </div>
+
         </div>
-        <hr style="border:none; border-top:1px solid #E2E8F0; margin:14px 0;">
-        <div style="font-size:13px; font-weight:700; color:#0F172A; margin-bottom:10px;">Status Kategori Warna:</div>
-        <div style="font-size:12.5px; color:#334155; line-height:2.2;">
-            <div>🟢 <b>Sangat Baik (≥ 100%)</b></div>
-            <div>🔵 <b>Baik (80% - 99,99%)</b></div>
-            <div>🟡 <b>Cukup (60% - 79,99%)</b></div>
-            <div>🔴 <b>Kurang (< 60%)</b></div>
-        </div>
-    </div>
-    """, unsafe_allow_html=True)
+        """,
+        unsafe_allow_html=True
+    )
 
 # =====================================================
 # LINK DOWNLOAD EXCEL GOOGLE SHEETS (BIRU SOLID NIMBUL 3D)
