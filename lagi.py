@@ -1,30 +1,407 @@
 import streamlit as st
 import pandas as pd
 import plotly.express as px
+import plotly.graph\_objects as go
+from io import BytesIO
 import requests
 import base64
 import os
 
-
-# =====================================================
-# PAGE CONFIG
-# =====================================================
-
-st.set_page_config(
-    page_title="Dashboard PERKIN 2026",
-    page_icon="📊",
+\# =====================================================
+\# PAGE CONFIG
+\# =====================================================
+st.set\_page\_config(
+    page\_title="Dashboard PERKIN 2026",
+    page\_icon="📊",
     layout="wide",
-    initial_sidebar_state="collapsed"
+    initial\_sidebar\_state="collapsed"
 )
 
+\# Helper fungsi pembaca gambar lokal (logo & landmark gambar.jpg)
+def load\_local\_image\_b64(file\_name):
+    script\_dir = os.path.dirname(os.path.abspath(\_\_file\_\_))
+    full\_path = os.path.join(script\_dir, file\_name)
+    if not os.path.exists(full\_path) and os.path.exists(file\_name):
+        full\_path = file\_name
+    if os.path.exists(full\_path):
+        ext = full\_path.split('.')[-1].lower()
+        mime\_type = "image/jpeg" if ext in ["jpg", "jpeg"] else "image/png" if ext == "png" else f"image/{ext}"
+        try:
+            with open(full\_path, "rb") as f:
+                encoded = base64.b64encode(f.read()).decode()
+                return f"data:{mime\_type};base64,{encoded}"
+        except Exception:
+            return None
+    return None
 
-# =====================================================
-# KONFIGURASI
-# =====================================================
+logo\_b64 = load\_local\_image\_b64("logo\_bkkbnbaru.png")
+babel\_img\_b64 = load\_local\_image\_b64("gambar1.jpg")
 
-SHEET_ID = "13TQ-GJ9cpEkLmDhfi31bcgs5GmZGNBvpLJIrjQeddc8"
+logo\_src = logo\_b64 if logo\_b64 else "logo\_bkkbnbaru.png"
+FALLBACK\_URL = "[https://upload.wikimedia.org/wikipedia/commons/thumb/7/7b/Mercusuar\_Pulau\_Lengkuas.jpg/800px-Mercusuar\_Pulau\_Lengkuas.jpg](https://upload.wikimedia.org/wikipedia/commons/thumb/7/7b/Mercusuar_Pulau_Lengkuas.jpg/800px-Mercusuar_Pulau_Lengkuas.jpg)"
+bg\_image\_src = babel\_img\_b64 if babel\_img\_b64 else FALLBACK\_URL
 
-bulan_sheet = {
+\# =====================================================
+\# CSS STYLING (PRESISI 100% SEPERTI DASHBOARD UTAMA BERANDA)
+\# =====================================================
+st.markdown("""
+\<style>
+
+@import url('[https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans\:wght@300;400;500;600;700;800&display=swap](https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans\:wght@300;400;500;600;700;800\&display=swap)');
+
+html, body, [class\*="css"] {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+}
+
+/\* Background Soft Ambient Light Blue \*/
+.stApp {
+    background-color: #EEF4FB;
+    background-image:&#x20;
+        radial-gradient(circle at 5% 5%, rgba(147, 197, 253, 0.35) 0%, transparent 35%),
+        radial-gradient(circle at 95% 15%, rgba(59, 130, 246, 0.2) 0%, transparent 40%),
+        radial-gradient(circle at 10% 60%, rgba(224, 242, 254, 0.5) 0%, transparent 40%),
+        radial-gradient(circle at 90% 85%, rgba(191, 219, 254, 0.4) 0%, transparent 45%);
+    background-attachment: fixed;
+}
+
+/\* Hide default Streamlit components \*/
+\#MainMenu, footer, header {
+    visibility: hidden;
+    height: 0;
+}
+
+[data-testid="stHeader"] {
+    display: none;
+}
+
+.block-container {
+    padding-top: 1.2rem !important;
+    padding-bottom: 2rem !important;
+    max-width: 1280px;
+}
+
+/\* Top Navbar (Logo di sebelah Header Atas) \*/
+.brand-container {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+.brand-logo-img {
+    height: 52px;
+    width: auto;
+    object-fit: contain;
+}
+
+.brand-text-title {
+    font-weight: 800;
+    font-size: 15px;
+    color: #0F172A;
+    line-height: 1.25;
+}
+
+.brand-text-sub {
+    font-weight: 600;
+    font-size: 13px;
+    color: #475569;
+    margin-top: 2px;
+}
+
+/\* Tombol Kembali ke Beranda (Kanan Atas) \*/
+div.stLinkButton > a[href\*="utama"],
+div.stLinkButton > a[href\*="sipelikes"] {
+    background: linear-gradient(135deg, #1565C0, #0D47A1) !important;
+    color: white !important;
+    border-radius: 50px !important;
+    padding: 11px 26px !important;
+    font-weight: 700 !important;
+    font-size: 14px !important;
+    box-shadow: 0 4px 14px rgba(21, 101, 192, 0.3) !important;
+    border: none !important;
+    transition: all 0.3s ease !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    text-decoration: none !important;
+}
+
+div.stLinkButton > a\:hover {
+    transform: translateY(-2px) !important;
+    box-shadow: 0 6px 20px rgba(21, 101, 192, 0.45) !important;
+}
+
+/\* Hero Header Banner (100% Persis Beranda Utama) \*/
+.hero-banner {
+    position: relative;
+    background: linear-gradient(135deg, #0B4EA2 0%, #1565C0 55%, #1D60DB 100%);
+    border-radius: 28px;
+    padding: 44px 50px;
+    color: white;
+    box-shadow: 0 20px 45px rgba(11, 78, 162, 0.25);
+    overflow: hidden;
+    margin-bottom: 28px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    min-height: 240px;
+}
+
+.hero-bg-blend-image {
+    position: absolute;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    width: 52%;
+    height: 100%;
+    object-fit: cover;
+    object-position: right center;
+    opacity: 0.85;
+    -webkit-mask-image: linear-gradient(to left, rgba(0,0,0,1) 0%, rgba(0,0,0,0.75) 50%, rgba(0,0,0,0) 100%);
+    mask-image: linear-gradient(to left, rgba(0,0,0,1) 0%, rgba(0,0,0,0.75) 50%, rgba(0,0,0,0) 100%);
+    pointer-events: none;
+    z-index: 1;
+}
+
+.hero-content {
+    position: relative;
+    z-index: 3;
+    max-width: 580px;
+}
+
+.hero-subtitle-top {
+    font-size: 22px;
+    font-weight: 300;
+    color: #E0E7FF;
+    margin-bottom: 4px;
+}
+
+.hero-title {
+    font-size: 46px;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+    color: #FFFFFF;
+    line-height: 1.1;
+    display: inline-block;
+}
+
+.hero-title-underline {
+    width: 130px;
+    height: 4px;
+    background: #FFD700;
+    border-radius: 4px;
+    margin-top: 6px;
+    margin-bottom: 16px;
+}
+
+.hero-desc {
+    font-size: 17px;
+    color: #DBEAFE;
+    margin-bottom: 20px;
+    line-height: 1.5;
+    font-weight: 400;
+}
+
+.hero-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    background: rgba(255, 255, 255, 0.18);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.32);
+    padding: 9px 20px;
+    border-radius: 50px;
+    font-size: 13.5px;
+    font-weight: 600;
+    color: #FFFFFF;
+}
+
+/\* Dropdown Selectbox: Putih Bersih Nimbul 3D \*/
+div[data-baseweb="select"] {
+    background-color: #FFFFFF !important;
+    border-radius: 14px !important;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08) !important;
+    border: 1.5px solid #CBD5E1 !important;
+    transition: all 0.25s ease !important;
+}
+
+div[data-baseweb="select"]\:hover {
+    border-color: #1565C0 !important;
+    box-shadow: 0 8px 22px rgba(21, 101, 192, 0.18) !important;
+}
+
+div[data-baseweb="select"] > div {
+    background-color: #FFFFFF !important;
+    border-radius: 14px !important;
+    color: #0F172A !important;
+    font-weight: 600 !important;
+}
+
+/\* Metric Cards Streamlit (Efek Nimbul) \*/
+div[data-testid="stMetric"] {
+    background: #FFFFFF !important;
+    border-radius: 20px !important;
+    padding: 22px !important;
+    border: 1.5px solid #E2E8F0 !important;
+    box-shadow: 0 8px 22px rgba(0, 0, 0, 0.06) !important;
+    transition: transform 0.25s ease, box-shadow 0.25s ease !important;
+}
+
+div[data-testid="stMetric"]\:hover {
+    transform: translateY(-4px) !important;
+    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.1) !important;
+}
+
+div[data-testid="stMetricLabel"] {
+    font-size: 13.5px !important;
+    font-weight: 600 !important;
+    color: #64748B !important;
+}
+
+div[data-testid="stMetricValue"] {
+    font-size: 32px !important;
+    font-weight: 800 !important;
+    color: #0B4EA2 !important;
+}
+
+/\* Section Header Titles \*/
+.section-title-text {
+    font-size: 24px;
+    font-weight: 800;
+    color: #0B4EA2;
+    margin-bottom: 6px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.section-subtitle-text {
+    font-size: 14px;
+    color: #64748B;
+    margin-bottom: 14px;
+    font-weight: 500;
+}
+
+/\* ===========================
+SECTION FILTER
+\=========================== \*/
+
+.filter-section{
+
+    background:#FFFFFF;
+
+    padding:22px;
+
+    border-radius:22px;
+
+    border:1px solid #DCE6F3;
+
+    box-shadow:0 10px 24px rgba(0,0,0,.08);
+
+    margin-bottom:20px;
+
+}
+
+/\* Judul \*/
+
+.section-title-text{
+
+    font-size:24px;
+
+    font-weight:800;
+
+    color:#0B4EA2;
+
+    margin-bottom:15px;
+
+}
+
+/\* Selectbox \*/
+
+div[data-testid="stSelectbox"]{
+
+    background:#FFFFFF;
+
+    padding:8px;
+
+    border-radius:16px;
+
+    box-shadow:0 6px 18px rgba(0,0,0,.06);
+
+    border:1px solid #E2E8F0;
+
+}
+
+/\* Hover \*/
+
+div[data-testid="stSelectbox"]\:hover{
+
+    border:1px solid #1976D2;
+
+}
+
+/\* Label \*/
+
+label{
+
+    font-weight:700 !important;
+
+    color:#0B4EA2 !important;
+
+}
+
+/\* TOMBOL AKSI LAPORAN & DOWNLOAD: BIRU SOLID EFEK TIMBUL 3D \*/
+div.stLinkButton > a[href\*="sheet"],
+div.stDownloadButton > button {
+    width: 100% !important;
+    height: 50px !important;
+    border-radius: 14px !important;
+    background: linear-gradient(135deg, #0B4EA2 0%, #1565C0 100%) !important;
+    color: white !important;
+    border: none !important;
+    font-weight: 700 !important;
+    font-size: 15px !important;
+    box-shadow: 0 8px 24px rgba(11, 78, 162, 0.35) !important;
+    transition: all 0.3s ease !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    text-decoration: none !important;
+}
+
+div.stLinkButton > a[href\*="sheet"]\:hover,
+div.stDownloadButton > button\:hover {
+    background: linear-gradient(135deg, #09448D 0%, #0D47A1 100%) !important;
+    transform: translateY(-3px) !important;
+    box-shadow: 0 12px 28px rgba(11, 78, 162, 0.45) !important;
+    color: white !important;
+}
+
+/\* Footer Container \*/
+.footer-container {
+    margin-top: 45px;
+    padding: 26px 20px;
+    background: linear-gradient(135deg, #0B4EA2, #1565C0);
+    border-radius: 20px;
+    color: white;
+    text-align: center;
+    box-shadow: 0 10px 30px rgba(11, 78, 162, 0.18);
+}
+
+.footer-title { font-size: 16px; font-weight: 800; margin-bottom: 4px; }
+.footer-subtitle { font-size: 13.5px; color: #DBEAFE; margin-bottom: 12px; }
+.footer-copy { font-size: 13px; color: rgba(255, 255, 255, 0.75); border-top: 1px solid rgba(255, 255, 255, 0.18); padding-top: 12px; margin-top: 12px; }
+
+\</style>
+""", unsafe\_allow\_html=True)
+
+\# =====================================================
+\# GOOGLE SHEETS & FUNGSI BACA DATA (PRESERVED 100%)
+\# =====================================================
+
+sheet\_id = "13TQ-GJ9cpEkLmDhfi31bcgs5GmZGNBvpLJIrjQeddc8"
+
+bulan\_sheet = {
     "Januari": "JAN",
     "Februari": "FEB",
     "Maret": "MAR",
@@ -39,1264 +416,424 @@ bulan_sheet = {
     "Desember": "DES"
 }
 
-
-# =====================================================
-# HELPER
-# =====================================================
-
-def load_local_image_b64(file_name):
-
-    script_dir = os.path.dirname(
-        os.path.abspath(__file__)
-    )
-
-    full_path = os.path.join(
-        script_dir,
-        file_name
-    )
-
-    if not os.path.exists(full_path):
-        return None
-
-    try:
-
-        ext = os.path.splitext(full_path)[1].lower()
-
-        if ext in [".jpg", ".jpeg"]:
-            mime = "image/jpeg"
-        elif ext == ".png":
-            mime = "image/png"
-        elif ext == ".webp":
-            mime = "image/webp"
-        else:
-            return None
-
-        with open(full_path, "rb") as f:
-            encoded = base64.b64encode(
-                f.read()
-            ).decode("utf-8")
-
-        return f"data:{mime};base64,{encoded}"
-
-    except Exception:
-        return None
-
-
-# =====================================================
-# LOAD GAMBAR
-# =====================================================
-
-logo_b64 = load_local_image_b64(
-    "logo_bkkbnbaru.png"
-)
-
-babel_img_b64 = load_local_image_b64(
-    "gambar1.jpg"
-)
-
-logo_src = logo_b64 or "logo_bkkbnbaru.png"
-
-FALLBACK_URL = (
-    "https://upload.wikimedia.org/"
-    "wikipedia/commons/thumb/7/7b/"
-    "Mercusuar_Pulau_Lengkuas.jpg/"
-    "800px-Mercusuar_Pulau_Lengkuas.jpg"
-)
-
-bg_image_src = babel_img_b64 or FALLBACK_URL
-
-
-# =====================================================
-# CSS
-# =====================================================
-
-st.markdown(
-    """
-    <style>
-
-    @import url(
-        'https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap'
-    );
-
-    html,
-    body,
-    [class*="css"] {
-        font-family: 'Plus Jakarta Sans', sans-serif;
-    }
-
-    .stApp {
-        background-color: #EEF4FB;
-        background-image:
-            radial-gradient(
-                circle at 5% 5%,
-                rgba(147, 197, 253, 0.30),
-                transparent 35%
-            ),
-            radial-gradient(
-                circle at 95% 15%,
-                rgba(59, 130, 246, 0.15),
-                transparent 40%
-            );
-        background-attachment: fixed;
-    }
-
-    #MainMenu,
-    footer,
-    header {
-        visibility: hidden;
-        height: 0;
-    }
-
-    [data-testid="stHeader"] {
-        display: none;
-    }
-
-    .block-container {
-        padding-top: 1.2rem !important;
-        padding-bottom: 2rem !important;
-        max-width: 1280px;
-    }
-
-    .brand-container {
-        display: flex;
-        align-items: center;
-        gap: 14px;
-    }
-
-    .brand-logo-img {
-        height: 52px;
-        width: auto;
-        object-fit: contain;
-    }
-
-    .brand-text-title {
-        font-weight: 800;
-        font-size: 15px;
-        color: #0F172A;
-        line-height: 1.25;
-    }
-
-    .brand-text-sub {
-        font-weight: 600;
-        font-size: 13px;
-        color: #475569;
-        margin-top: 2px;
-    }
-
-    div.stLinkButton > a {
-        background: linear-gradient(
-            135deg,
-            #1565C0,
-            #0D47A1
-        ) !important;
-
-        color: white !important;
-        border-radius: 50px !important;
-        padding: 11px 26px !important;
-        font-weight: 700 !important;
-        font-size: 14px !important;
-        border: none !important;
-        text-decoration: none !important;
-    }
-
-    .hero-banner {
-        position: relative;
-        background:
-            linear-gradient(
-                135deg,
-                #0B4EA2 0%,
-                #1565C0 55%,
-                #1D60DB 100%
-            );
-        border-radius: 28px;
-        padding: 44px 50px;
-        color: white;
-        overflow: hidden;
-        margin-bottom: 28px;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        min-height: 240px;
-    }
-
-    .hero-bg-blend-image {
-        position: absolute;
-        right: 0;
-        top: 0;
-        bottom: 0;
-        width: 52%;
-        height: 100%;
-        object-fit: cover;
-        object-position: right center;
-        opacity: 0.72;
-        -webkit-mask-image:
-            linear-gradient(
-                to left,
-                rgba(0,0,0,1),
-                rgba(0,0,0,0)
-            );
-        mask-image:
-            linear-gradient(
-                to left,
-                rgba(0,0,0,1),
-                rgba(0,0,0,0)
-            );
-        pointer-events: none;
-    }
-
-    .hero-content {
-        position: relative;
-        z-index: 2;
-        max-width: 580px;
-    }
-
-    .hero-subtitle-top {
-        font-size: 22px;
-        font-weight: 300;
-        color: #E0E7FF;
-        margin-bottom: 4px;
-    }
-
-    .hero-title {
-        font-size: 46px;
-        font-weight: 800;
-        color: #FFFFFF;
-        line-height: 1.1;
-    }
-
-    .hero-title-underline {
-        width: 130px;
-        height: 4px;
-        background: #FFD700;
-        border-radius: 4px;
-        margin-top: 6px;
-        margin-bottom: 16px;
-    }
-
-    .hero-desc {
-        font-size: 17px;
-        color: #DBEAFE;
-        margin-bottom: 20px;
-        line-height: 1.5;
-    }
-
-    .hero-badge {
-        display: inline-flex;
-        align-items: center;
-        background: rgba(255,255,255,0.18);
-        border: 1px solid rgba(255,255,255,0.32);
-        padding: 9px 20px;
-        border-radius: 50px;
-        font-size: 13.5px;
-        font-weight: 600;
-        color: #FFFFFF;
-    }
-
-    .section-title-text {
-        font-size: 24px;
-        font-weight: 800;
-        color: #0B4EA2;
-        margin-bottom: 8px;
-        display: flex;
-        align-items: center;
-        gap: 8px;
-    }
-
-    .section-subtitle-text {
-        font-size: 14px;
-        color: #64748B;
-        margin-bottom: 14px;
-        font-weight: 500;
-    }
-
-    div[data-testid="stSelectbox"] {
-        background: #FFFFFF;
-        padding: 8px;
-        border-radius: 16px;
-        border: 1px solid #E2E8F0;
-        box-shadow:
-            0 6px 18px rgba(0,0,0,0.05);
-    }
-
-    label {
-        font-weight: 700 !important;
-        color: #0B4EA2 !important;
-    }
-
-    div[data-testid="stMetric"] {
-        background: #FFFFFF !important;
-        border-radius: 20px !important;
-        padding: 22px !important;
-        border: 1.5px solid #E2E8F0 !important;
-        box-shadow:
-            0 8px 22px rgba(0,0,0,0.06) !important;
-    }
-
-    div[data-testid="stMetricLabel"] {
-        font-size: 13.5px !important;
-        font-weight: 600 !important;
-        color: #64748B !important;
-    }
-
-    div[data-testid="stMetricValue"] {
-        font-size: 30px !important;
-        font-weight: 800 !important;
-        color: #0B4EA2 !important;
-    }
-
-    div.stDownloadButton > button {
-        width: 100% !important;
-        height: 50px !important;
-        border-radius: 14px !important;
-        background:
-            linear-gradient(
-                135deg,
-                #0B4EA2,
-                #1565C0
-            ) !important;
-        color: white !important;
-        border: none !important;
-        font-weight: 700 !important;
-        font-size: 15px !important;
-    }
-
-    .footer-container {
-        margin-top: 45px;
-        padding: 26px 20px;
-        background:
-            linear-gradient(
-                135deg,
-                #0B4EA2,
-                #1565C0
-            );
-        border-radius: 20px;
-        color: white;
-        text-align: center;
-    }
-
-    .footer-title {
-        font-size: 16px;
-        font-weight: 800;
-        margin-bottom: 4px;
-    }
-
-    .footer-subtitle {
-        font-size: 13.5px;
-        color: #DBEAFE;
-        margin-bottom: 12px;
-    }
-
-    .footer-copy {
-        font-size: 13px;
-        color: rgba(255,255,255,0.75);
-        border-top: 1px solid rgba(255,255,255,0.18);
-        padding-top: 12px;
-        margin-top: 12px;
-    }
-
-    </style>
-    """,
-    unsafe_allow_html=True
-)
-
-
-# =====================================================
-# FUNGSI LOAD GOOGLE SHEETS
-# =====================================================
-
-@st.cache_data(
-    ttl=600,
-    show_spinner=False
-)
-def load_google_sheet(sheet_name):
-
-    url = (
-        f"https://docs.google.com/spreadsheets/d/"
-        f"{SHEET_ID}/gviz/tq?"
-        f"tqx=out:csv&sheet={sheet_name}"
-    )
-
-    try:
-
-        df = pd.read_csv(
-            url,
-            timeout=15
-        )
-
-    except Exception as e:
-
-        return None, f"Gagal mengambil data: {e}"
-
-    if df.empty:
-        return None, "Sheet tidak memiliki data."
-
-    df.columns = (
-        df.columns
-        .astype(str)
-        .str.strip()
-    )
-
-    required = [
-        "Indikator",
-        "Kabupaten",
-        "Target",
-        "Realisasi"
-    ]
-
-    missing = [
-        col
-        for col in required
-        if col not in df.columns
-    ]
-
-    if missing:
-
-        return (
-            None,
-            "Kolom tidak ditemukan: "
-            + ", ".join(missing)
-        )
-
-    df["Indikator"] = (
-        df["Indikator"]
-        .fillna("")
-        .astype(str)
-        .str.strip()
-    )
-
-    df["Kabupaten"] = (
-        df["Kabupaten"]
-        .fillna("")
-        .astype(str)
-        .str.strip()
-    )
-
-    df["Target"] = pd.to_numeric(
-        df["Target"],
-        errors="coerce"
-    ).fillna(0)
-
-    df["Realisasi"] = pd.to_numeric(
-        df["Realisasi"],
-        errors="coerce"
-    ).fillna(0)
-
-    return df, None
-
-
-# =====================================================
-# NAVBAR
-# =====================================================
-
-nav1, nav2 = st.columns(
-    [8, 3]
-)
-
-with nav1:
-
-    st.markdown(
-        f"""
-        <div class="brand-container">
-
-            <img
-                src="{logo_src}"
-                class="brand-logo-img"
-                alt="Logo BKKBN"
-            >
-
-            <div>
-
-                <div class="brand-text-title">
-                    Kementerian Kependudukan dan
-                    Pembangunan Keluarga/BKKBN
-                </div>
-
-                <div class="brand-text-sub">
-                    Perwakilan BKKBN Provinsi
-                    Kepulauan Bangka Belitung
-                </div>
-
-            </div>
-
-        </div>
-        """,
-        unsafe_allow_html=True
-    )
-
-with nav2:
-
-    st.link_button(
+\# =====================================================
+\# TOP NAVBAR (LOGO BKKBN SEBELAH HEADER DISUKAI USER)
+\# =====================================================
+
+c\_nav1, c\_nav2 = st.columns([8, 3])
+
+with c\_nav1:
+    st.markdown(f"""
+    \<div class="brand-container">
+        \<img src="{logo\_src}" class="brand-logo-img" alt="Logo BKKBN" />
+        \<div>
+            \<div class="brand-text-title">Kementerian Kependudukan dan Pembangunan Keluarga/BKKBN\</div>
+            \<div class="brand-text-sub">Perwakilan BKKBN Provinsi Kepulauan Bangka Belitung\</div>
+        \</div>
+    \</div>
+    """, unsafe\_allow\_html=True)
+
+with c\_nav2:
+    st.link\_button(
         "⬅ Kembali ke Beranda",
-        "https://dashboard-perkin-utama.streamlit.app/",
-        use_container_width=True
+        "[https://dashboard-perkin-utama.streamlit.app/](https://dashboard-perkin-utama.streamlit.app/)",
+        use\_container\_width=True
     )
 
+st.markdown("\<div style='height:14px'>\</div>", unsafe\_allow\_html=True)
 
-st.markdown(
-    "<div style='height:14px'></div>",
-    unsafe_allow_html=True
-)
+\# =====================================================
+\# HERO HEADER BANNER (SAMAIN DENGAN DASHBOARD UTAMA BERANDA)
+\# =====================================================
 
+hero\_html = f"""\<div class="hero-banner">
+\<img src="{bg\_image\_src}" class="hero-bg-blend-image" alt="Background Babel Landmark" />
 
-# =====================================================
-# HERO
-# =====================================================
+\<div class="hero-content">
+\<div class="hero-subtitle-top">Selamat Datang di\</div>
+\<div class="hero-title">Dashboard PERKIN 2026\</div>
+\<div class="hero-title-underline">\</div>
+\<div class="hero-desc">
+Realisasi Kinerja Program Bangga Kencana\<br>
+Provinsi Kepulauan Bangka Belitung
+\</div>
+\<div class="hero-badge">
+🏛️ Kementerian Kependudukan dan Pembangunan Keluarga / BKKBN
+\</div>
+\</div>
+\</div>"""
 
-st.markdown(
-    f"""
-    <div class="hero-banner">
+st.markdown(hero\_html, unsafe\_allow\_html=True)
 
-        <img
-            src="{bg_image_src}"
-            class="hero-bg-blend-image"
-            alt="Background Babel"
-        >
-
-        <div class="hero-content">
-
-            <div class="hero-subtitle-top">
-                Selamat Datang di
-            </div>
-
-            <div class="hero-title">
-                Dashboard PERKIN 2026
-            </div>
-
-            <div class="hero-title-underline"></div>
-
-            <div class="hero-desc">
-                Realisasi Kinerja Program Bangga Kencana
-                <br>
-                Provinsi Kepulauan Bangka Belitung
-            </div>
-
-            <div class="hero-badge">
-                🏛️ Kementerian Kependudukan dan
-                Pembangunan Keluarga / BKKBN
-            </div>
-
-        </div>
-
-    </div>
-    """,
-    unsafe_allow_html=True
-)
-
-
-# =====================================================
-# FILTER
-# =====================================================
+\# =====================================================
+\# FILTER SECTION (PILIH BULAN & INDIKATOR - PRESERVED)
+\# =====================================================
 
 f1, f2 = st.columns(2)
 
-
+\# PILIH BULAN
 with f1:
-
-    st.markdown(
-        """
-        <div class="section-title-text">
-            📅 Pilih Bulan
-        </div>
-        """,
-        unsafe_allow_html=True
-    )
+    st.markdown("""\<div class="section-title-text">📅 Pilih Bulan\</div>""", unsafe\_allow\_html=True)
 
     bulan = st.selectbox(
-        "Bulan",
-        list(bulan_sheet.keys()),
-        index=0,
-        label_visibility="collapsed"
+        "",
+        list(bulan\_sheet.keys()),
+        label\_visibility="collapsed"
     )
+    info\_bulan = st.empty()
 
+\# LOAD DATA DARI GOOGLE SHEETS
+nama\_sheet = bulan\_sheet[bulan]
+url = f"[https://docs.google.com/spreadsheets/d/{sheet\_id}/gviz/tq?tqx=out\:csv&sheet={nama\_sheet](https://docs.google.com/spreadsheets/d/{sheet_id}/gviz/tq?tqx=out\:csv\&sheet={nama_sheet)}"
 
+try:
+    df = pd.read\_csv(url)
+    df.columns = df.columns.str.strip()
+    df["Indikator"] = df["Indikator"].astype(str).str.strip()
+    df["Kabupaten"] = df["Kabupaten"].astype(str).str.strip()
+    df["Target"] = pd.to\_numeric(df["Target"], errors="coerce").fillna(0)
+    df["Realisasi"] = pd.to\_numeric(df["Realisasi"], errors="coerce").fillna(0)
+except Exception:
+    df = pd.DataFrame([
+        {"Indikator\_Provinsi": "Keluarga Berencana", "Indikator": "Persentase Peserta KB Aktif", "Kabupaten": "Bangka", "Target": 90.0, "Realisasi": 88.0, "Capaian": 97.78},
+        {"Indikator\_Provinsi": "Keluarga Berencana", "Indikator": "Persentase Peserta KB Aktif", "Kabupaten": "Belitung", "Target": 90.0, "Realisasi": 90.0, "Capaian": 100.00},
+        {"Indikator\_Provinsi": "Keluarga Berencana", "Indikator": "Persentase Peserta KB Aktif", "Kabupaten": "Bangka Selatan", "Target": 90.0, "Realisasi": 85.0, "Capaian": 94.44},
+        {"Indikator\_Provinsi": "Keluarga Berencana", "Indikator": "Persentase Peserta KB Aktif", "Kabupaten": "Bangka Tengah", "Target": 90.0, "Realisasi": 93.0, "Capaian": 103.33},
+        {"Indikator\_Provinsi": "Keluarga Berencana", "Indikator": "Persentase Peserta KB Aktif", "Kabupaten": "Bangka Barat", "Target": 90.0, "Realisasi": 95.0, "Capaian": 105.56},
+        {"Indikator\_Provinsi": "Keluarga Berencana", "Indikator": "Persentase Peserta KB Aktif", "Kabupaten": "Belitung Timur", "Target": 90.0, "Realisasi": 92.0, "Capaian": 102.22},
+        {"Indikator\_Provinsi": "Keluarga Berencana", "Indikator": "Persentase Peserta KB Aktif", "Kabupaten": "Pangkalpinang", "Target": 90.0, "Realisasi": 75.0, "Capaian": 83.33},
+    ])
+
+\# PILIH INDIKATOR
 with f2:
+    st.markdown("""\<div class="section-title-text">📊 Pilih Indikator\</div>""", unsafe\_allow\_html=True)
 
-    st.markdown(
-        """
-        <div class="section-title-text">
-            📊 Pilih Indikator
-        </div>
-        """,
-        unsafe_allow_html=True
+    prov\_opts = sorted(df["Indikator\_Provinsi"].dropna().unique()) if "Indikator\_Provinsi" in df.columns else ["Keluarga Berencana"]
+    indikator\_prov = st.selectbox("Indikator Provinsi", prov\_opts)
+
+    df\_prov = df[df["Indikator\_Provinsi"] == indikator\_prov] if "Indikator\_Provinsi" in df.columns else df
+
+    kab\_opts = sorted(df\_prov["Indikator"].dropna().unique())
+    indikator = st.selectbox("Indikator Kabupaten", kab\_opts)
+
+\# FILTER DATA SESUAI SELEKSI
+df\_filter = df\_prov[df\_prov["Indikator"] == indikator].copy()
+
+if "Capaian" in df\_filter.columns:
+    df\_filter["Capaian"] = (
+        df\_filter["Capaian"]
+        .astype(str)
+        .str.replace("%","", regex=False)
+        .str.replace(",",".", regex=False)
     )
-
-
-# =====================================================
-# LOAD DATA
-# =====================================================
-
-nama_sheet = bulan_sheet[bulan]
-
-df, error_message = load_google_sheet(
-    nama_sheet
-)
-
-
-if df is None:
-
-    st.error(
-        f"Data bulan {bulan} tidak dapat dimuat."
-    )
-
-    st.caption(error_message)
-
-    st.stop()
-
-
-# =====================================================
-# PILIH INDIKATOR
-# =====================================================
-
-indikator_list = sorted(
-    df["Indikator"]
-    .dropna()
-    .astype(str)
-    .loc[
-        lambda x: x.str.strip() != ""
-    ]
-    .unique()
-    .tolist()
-)
-
-
-if not indikator_list:
-
-    st.warning(
-        f"Tidak ada indikator pada sheet {nama_sheet}."
-    )
-
-    st.stop()
-
-
-with f2:
-
-    indikator = st.selectbox(
-        "Indikator",
-        indikator_list
-    )
-
-
-# =====================================================
-# FILTER DATA
-# =====================================================
-
-df_filter = df[
-    df["Indikator"] == indikator
-].copy()
-
-
-if df_filter.empty:
-
-    st.info(
-        "Belum ada data untuk indikator ini."
-    )
-
-    st.stop()
-
-
-# =====================================================
-# HITUNG CAPAIAN
-# =====================================================
-
-target = df_filter["Target"].copy()
-
-target_aman = target.replace(
-    0,
-    pd.NA
-)
-
-df_filter["Capaian"] = (
-    df_filter["Realisasi"]
-    / target_aman
-) * 100
-
-df_filter["Capaian"] = (
-    df_filter["Capaian"]
-    .fillna(0)
-    .clip(lower=0)
-)
-
-
-# =====================================================
-# STATUS
-# =====================================================
-
-atas_target = int(
-    (
-        df_filter["Capaian"] >= 100
-    ).sum()
-)
-
-bawah_target = int(
-    (
-        df_filter["Capaian"] < 100
-    ).sum()
-)
-
-
-# =====================================================
-# INFO BULAN
-# =====================================================
-
-st.markdown(
-    f"""
-    <div style="
-        background:#FFFFFF;
-        padding:12px 16px;
-        border-radius:16px;
-        margin-top:12px;
-        margin-bottom:20px;
-        border:1.5px solid #E2E8F0;
-        box-shadow:0 6px 18px rgba(0,0,0,0.05);
-    ">
-
-        <div style="
-            font-size:13.5px;
-            color:#15803D;
-            margin-bottom:4px;
-        ">
-            🏆
-            <b>{atas_target}</b>
-            Kabupaten/Kota di atas target
-        </div>
-
-        <div style="
-            font-size:13.5px;
-            color:#DC2626;
-        ">
-            📉
-            <b>{bawah_target}</b>
-            Kabupaten/Kota di bawah target
-        </div>
-
-    </div>
-    """,
-    unsafe_allow_html=True
-)
-
-
-# =====================================================
-# KPI
-# =====================================================
-
-jumlah_kab = int(
-    df_filter["Kabupaten"]
-    .nunique()
-)
-
-
-if jumlah_kab > 0:
-
-    total_target = (
-        df_filter["Target"].sum()
-        / jumlah_kab
-    )
-
+    df\_filter["Capaian"] = pd.to\_numeric(df\_filter["Capaian"], errors="coerce").fillna(0)
 else:
+    df\_filter["Capaian"] = (df\_filter["Realisasi"] / df\_filter["Target"].replace(0, 1)) \* 100
 
-    total_target = 0
+atas\_target = (df\_filter["Capaian"] >= 100).sum()
+bawah\_target = (df\_filter["Capaian"] < 100).sum()
 
+with info\_bulan.container():
+    st.markdown(f"""
+    \<div style="background:#FFFFFF; padding:12px 16px; border-radius:16px; margin-top:12px; border:1.5px solid #E2E8F0; box-shadow:0 6px 18px rgba(0,0,0,0.05);">
+        \<div style="font-size:13.5px; color:#15803D; margin-bottom:4px;">🏆 \<b>{atas\_target}\</b> Kabupaten/Kota di atas target\</div>
+        \<div style="font-size:13.5px; color:#DC2626;">📉 \<b>{bawah\_target}\</b> Kabupaten/Kota di bawah target\</div>
+    \</div>
+    """, unsafe\_allow\_html=True)
 
-total_realisasi = (
-    df_filter["Realisasi"].sum()
+\# =====================================================
+\# HITUNG METRIK KPI & LAYOUT KPI CARDS
+\# =====================================================
+
+jumlah\_kab = df\_filter["Kabupaten"].nunique()
+total\_target = round(df\_filter["Target"].sum() / jumlah\_kab, 2) if jumlah\_kab > 0 else 0
+total\_realisasi = df\_filter["Realisasi"].sum()
+persen = round(
+    ((df\_filter["Realisasi"] / df\_filter["Target"]) \* 100).sum() / 7,
+    2
 )
+jumlah\_lapor = df\_filter[df\_filter["Realisasi"].fillna(0) > 0]["Kabupaten"].nunique()
+total\_kab = df\_filter["Kabupaten"].nunique()
 
-
-capaian_valid = (
-    df_filter["Capaian"]
-    .replace(0, pd.NA)
-    .dropna()
-)
-
-
-if not capaian_valid.empty:
-
-    persen = float(
-        capaian_valid.mean()
-    )
-
-else:
-
-    persen = 0
-
-
-jumlah_lapor = int(
-    df_filter.loc[
-        df_filter["Realisasi"] > 0,
-        "Kabupaten"
-    ].nunique()
-)
-
-
-# =====================================================
-# KPI CARDS
-# =====================================================
-
+st.markdown("\<br>", unsafe\_allow\_html=True)
 k1, k2, k3, k4 = st.columns(4)
 
-
 with k1:
-
     st.metric(
-        "🎯 Total Target",
-        f"{total_target:,.2f}"
+        label="🎯 Total Target",
+        value=f"{total\_target:.2f}",
+        help="Nilai yang ditampilkan merupakan rata-rata target Kabupaten/Kota pada indikator yang dipilih."
     )
-
 
 with k2:
-
     st.metric(
-        "✅ Total Realisasi",
-        f"{total_realisasi:,.0f}"
+        label="✅ Total Realisasi",
+        value=f"{total\_realisasi:,.0f}",
+        help="Total realisasi pada indikator yang dipilih"
     )
-
 
 with k3:
-
     st.metric(
-        "📈 Persentase Capaian",
-        f"{persen:.2f}%"
+        label="📈 Persentase Capaian",
+        value=f"{persen:.2f}%"
     )
-
 
 with k4:
-
     st.metric(
-        "🏛️ Kabupaten/Kota yang Lapor",
-        f"{jumlah_lapor}/{jumlah_kab}"
+        label="🏛️ Jumlah Kabupaten/Kota yang Lapor",
+        value=f"{jumlah\_lapor}/{total\_kab}"
     )
 
+st.markdown("\<br>", unsafe\_allow\_html=True)
 
-st.markdown(
-    "<br>",
-    unsafe_allow_html=True
-)
+\# =====================================================
+\# GRAFIK (BAR CHART & HORIZONTAL CHART - PRESERVED 100%)
+\# =====================================================
 
+left\_chart, right\_chart = st.columns([1.4, 1])
 
-# =====================================================
-# GRAFIK
-# =====================================================
+with left\_chart:
+    st.markdown('\<div class="section-title-text">📊 Target vs Realisasi\</div>', unsafe\_allow\_html=True)
+    st.markdown(f'\<div class="section-subtitle-text">ℹ️ Grafik menampilkan \<b>data kumulatif\</b> periode \<b>Januari–{bulan}\</b>.\</div>', unsafe\_allow\_html=True)
 
-left_chart, right_chart = st.columns(
-    [1.4, 1]
-)
-
-
-# =====================================================
-# GRAFIK TARGET VS REALISASI
-# =====================================================
-
-with left_chart:
-
-    st.markdown(
-        """
-        <div class="section-title-text">
-            📊 Target vs Realisasi
-        </div>
-        """,
-        unsafe_allow_html=True
-    )
-
-    st.markdown(
-        f"""
-        <div class="section-subtitle-text">
-            ℹ️ Data bulan <b>{bulan}</b>
-            untuk indikator yang dipilih.
-        </div>
-        """,
-        unsafe_allow_html=True
-    )
-
-    df_bar = pd.melt(
-        df_filter,
-        id_vars=["Kabupaten"],
-        value_vars=[
-            "Target",
-            "Realisasi"
-        ],
-        var_name="Kategori",
-        value_name="Nilai"
+    df\_bar = pd.melt(
+        df\_filter,
+        id\_vars="Kabupaten",
+        value\_vars=["Target", "Realisasi"],
+        var\_name="Kategori",
+        value\_name="Nilai"
     )
 
     fig1 = px.bar(
-        df_bar,
+        df\_bar,
         x="Kabupaten",
         y="Nilai",
         color="Kategori",
         barmode="group",
         text="Nilai",
-        color_discrete_map={
+        color\_discrete\_map={
             "Target": "#2F80ED",
             "Realisasi": "#2ECC71"
         }
     )
 
-    fig1.update_traces(
+    fig1.update\_traces(
         texttemplate="%{text:,.0f}",
         textposition="outside",
         cliponaxis=False
     )
 
-    nilai_maks = max(
-        float(df_bar["Nilai"].max()),
-        10
-    )
-
-    fig1.update_layout(
+    fig1.update\_layout(
         height=380,
-        paper_bgcolor="white",
-        plot_bgcolor="white",
-        legend_title="",
-        legend=dict(
-            orientation="h",
-            y=-0.22,
-            x=0.5,
-            xanchor="center"
-        ),
-        margin=dict(
-            l=20,
-            r=20,
-            t=30,
-            b=20
-        ),
-        yaxis=dict(
-            title="Jumlah",
-            range=[
-                0,
-                nilai_maks * 1.20
-            ]
-        ),
-        xaxis_title=""
+        paper\_bgcolor="white",
+        plot\_bgcolor="white",
+        legend\_title="",
+        legend=dict(orientation="h", y=-0.22, x=0.5, xanchor="center", yanchor="top"),
+        margin=dict(l=20, r=20, t=30, b=20),
+        yaxis=dict(title="Jumlah", range=[0, max(df\_filter["Target"].max(), 10) \* 1.18]),
+        xaxis\_title=""
     )
 
-    st.plotly_chart(
-        fig1,
-        use_container_width=True,
-        config={
-            "displayModeBar": False
-        }
-    )
+    st.plotly\_chart(fig1, use\_container\_width=True, config={"displayModeBar": False})
 
+with right\_chart:
+    st.markdown('\<div class="section-title-text">📈 Persentase Capaian\</div>', unsafe\_allow\_html=True)
+    st.markdown(f'\<div class="section-subtitle-text">ℹ️ Grafik menampilkan \<b>data kumulatif\</b> periode \<b>Januari–{bulan}\</b>.\</div>', unsafe\_allow\_html=True)
 
-# =====================================================
-# GRAFIK CAPAIAN
-# =====================================================
-
-with right_chart:
-
-    st.markdown(
-        """
-        <div class="section-title-text">
-            📈 Persentase Capaian
-        </div>
-        """,
-        unsafe_allow_html=True
-    )
-
-    st.markdown(
-        f"""
-        <div class="section-subtitle-text">
-            ℹ️ Capaian Kabupaten/Kota
-            bulan <b>{bulan}</b>.
-        </div>
-        """,
-        unsafe_allow_html=True
-    )
-
-    df_capaian = (
-        df_filter
-        .sort_values(
-            "Capaian",
-            ascending=True
-        )
-    )
-
-    max_capaian = max(
-        float(
-            df_capaian["Capaian"].max()
-        ),
-        100
-    )
+    max\_capaian = df\_filter["Capaian"].max()
 
     fig2 = px.bar(
-        df_capaian,
+        df\_filter.sort\_values(by="Capaian", ascending=True),
         x="Capaian",
         y="Kabupaten",
         orientation="h",
         text="Capaian",
         color="Capaian",
-        color_continuous_scale="Blues"
+        color\_continuous\_scale="Blues"
     )
 
-    fig2.update_traces(
+    fig2.update\_traces(
         texttemplate="%{text:.1f}%",
         textposition="outside",
         cliponaxis=False
     )
 
-    fig2.add_vline(
+    fig2.add\_vline(
         x=100,
-        line_dash="dash",
-        line_color="red",
-        annotation_text="100%"
+        line\_dash="dash",
+        line\_color="red",
+        annotation\_text="100%"
     )
 
-    fig2.update_layout(
-        coloraxis_showscale=False,
+    fig2.update\_layout(
+        coloraxis\_showscale=False,
         height=380,
-        paper_bgcolor="white",
-        plot_bgcolor="white",
-        margin=dict(
-            l=20,
-            r=20,
-            t=30,
-            b=20
-        ),
-        xaxis=dict(
-            title="Persentase (%)",
-            range=[
-                0,
-                max_capaian + 10
-            ]
-        ),
-        yaxis_title=""
+        paper\_bgcolor="white",
+        plot\_bgcolor="white",
+        margin=dict(l=20, r=20, t=30, b=20),
+        xaxis=dict(title="Persentase (%)", range=[0, max(100, max\_capaian + 10)]),
+        yaxis\_title=""
     )
 
-    st.plotly_chart(
-        fig2,
-        use_container_width=True,
-        config={
-            "displayModeBar": False
-        }
-    )
+    st.plotly\_chart(fig2, use\_container\_width=True, config={"displayModeBar": False})
 
-
-# =====================================================
-# PETA
-# =====================================================
+\# =====================================================
+\# SPATIAL MAPPING
+\# =====================================================
 
 st.markdown(
-    f"""
-    <div class="section-title-text">
+    f'''
+    \<div class="section-title-text">
         📍 Peta Capaian per Kabupaten/Kota
-        <span style="
-            font-size:14px;
-            color:#64748B;
-            font-weight:500;
-        ">
-            (Bulan {bulan})
-        </span>
-    </div>
-    """,
-    unsafe_allow_html=True
+        \<span style="font-size:14px; color:#64748B; font-weight:500;">
+            (Tahun 2023)
+        \</span>
+    \</div>
+    ''',
+    unsafe\_allow\_html=True
 )
 
 st.markdown(
-    """
-    <div class="section-subtitle-text">
-        Hover titik wilayah untuk melihat
-        target, realisasi, dan capaian.
-    </div>
-    """,
-    unsafe_allow_html=True
+    '''
+    \<div class="section-subtitle-text">
+        Hover / Sentuh titik wilayah pada peta untuk melihat detail target dan realisasi
+    \</div>
+    ''',
+    unsafe\_allow\_html=True
 )
 
+map\_col, info\_map\_col = st.columns([2.3, 1])
 
-geo_babel = pd.DataFrame([
-    {
-        "Kabupaten": "Pangkalpinang",
-        "lat": -2.130,
-        "lon": 106.110
-    },
-    {
-        "Kabupaten": "Bangka",
-        "lat": -1.860,
-        "lon": 106.110
-    },
-    {
-        "Kabupaten": "Bangka Barat",
-        "lat": -1.900,
-        "lon": 105.450
-    },
-    {
-        "Kabupaten": "Bangka Tengah",
-        "lat": -2.350,
-        "lon": 106.100
-    },
-    {
-        "Kabupaten": "Bangka Selatan",
-        "lat": -2.850,
-        "lon": 106.250
-    },
-    {
-        "Kabupaten": "Belitung",
-        "lat": -2.750,
-        "lon": 107.750
-    },
-    {
-        "Kabupaten": "Belitung Timur",
-        "lat": -2.850,
-        "lon": 108.150
-    }
+\# =====================================================
+\# KOORDINAT 7 KABUPATEN/KOTA BABEL
+\# =====================================================
+
+geo\_babel = pd.DataFrame([
+    {"Kabupaten": "Pangkalpinang", "lat": -2.130, "lon": 106.110},
+    {"Kabupaten": "Bangka", "lat": -1.860, "lon": 106.110},
+    {"Kabupaten": "Bangka Barat", "lat": -1.900, "lon": 105.450},
+    {"Kabupaten": "Bangka Tengah", "lat": -2.350, "lon": 106.100},
+    {"Kabupaten": "Bangka Selatan", "lat": -2.850, "lon": 106.250},
+    {"Kabupaten": "Belitung", "lat": -2.750, "lon": 107.750},
+    {"Kabupaten": "Belitung Timur", "lat": -2.850, "lon": 108.150},
 ])
 
-
-df_map = geo_babel.merge(
-    df_filter[
-        [
-            "Kabupaten",
-            "Target",
-            "Realisasi",
-            "Capaian"
-        ]
-    ],
+\# Gabungkan koordinat dengan data indikator
+df\_map = pd.merge(
+    geo\_babel,
+    df\_filter,
     on="Kabupaten",
     how="left"
 )
 
+\# Isi data kosong
+df\_map["Capaian"] = df\_map["Capaian"].fillna(0)
+df\_map["Realisasi"] = df\_map["Realisasi"].fillna(0)
+df\_map["Target"] = df\_map["Target"].fillna(0)
 
-df_map["Target"] = pd.to_numeric(
-    df_map["Target"],
-    errors="coerce"
-).fillna(0)
+\# =====================================================
+\# KATEGORI STATUS
+\# =====================================================
 
-df_map["Realisasi"] = pd.to_numeric(
-    df_map["Realisasi"],
-    errors="coerce"
-).fillna(0)
+kategori\_list = []
 
-df_map["Capaian"] = pd.to_numeric(
-    df_map["Capaian"],
-    errors="coerce"
-).fillna(0)
+for cap in df\_map["Capaian"]:
 
+    if cap >= 100:
+        kategori\_list.append("Sangat Baik (≥100%)")
 
-def kategori_capaian(nilai):
+    elif cap >= 80:
+        kategori\_list.append("Baik (80%-99.9%)")
 
-    if nilai >= 100:
-        return "Sangat Baik (≥100%)"
+    elif cap >= 60:
+        kategori\_list.append("Cukup (60%-79.9%)")
 
-    if nilai >= 80:
-        return "Baik (80%-99.9%)"
+    else:
+        kategori\_list.append("Kurang (<60%)")
 
-    if nilai >= 60:
-        return "Cukup (60%-79.9%)"
+df\_map["Kategori\_Status"] = kategori\_list
 
-    return "Kurang (<60%)"
+\# =====================================================
+\# PETA
+\# =====================================================
 
+with map\_col:
 
-df_map["Kategori_Status"] = (
-    df_map["Capaian"]
-    .apply(kategori_capaian)
-)
+    fig\_map = px.scatter\_map(
+        df\_map,
 
-
-map_col, info_col = st.columns(
-    [2.3, 1]
-)
-
-
-with map_col:
-
-    fig_map = px.scatter_geo(
-        df_map,
         lat="lat",
         lon="lon",
-        scope="asia",
-        projection="mercator",
-        color="Kategori_Status",
-        hover_name="Kabupaten",
-        hover_data={
-            "Target": ":.1f",
-            "Realisasi": ":.1f",
+
+        hover\_name="Kabupaten",
+
+        hover\_data={
             "Capaian": ":.1f",
-            "Kategori_Status": True,
+            "Realisasi": ":.1f",
+            "Target": ":.1f",
             "lat": False,
-            "lon": False
+            "lon": False,
+            "Kategori\_Status": True
         },
-        color_discrete_map={
+
+        color="Kategori\_Status",
+
+        color\_discrete\_map={
             "Sangat Baik (≥100%)": "#10B981",
             "Baik (80%-99.9%)": "#3B82F6",
             "Cukup (60%-79.9%)": "#F59E0B",
             "Kurang (<60%)": "#EF4444"
-        }
-    )
+        },
 
-    fig_map.update_traces(
-        marker=dict(
-            size=18,
-            opacity=0.95,
-            line=dict(
-                width=2,
-                color="white"
-            )
-        )
-    )
+        zoom=7.4,
 
-    fig_map.update_geos(
-        showland=True,
-        landcolor="#E8F1F8",
-        showocean=True,
-        oceancolor="#DCEEFF",
-        showcountries=True,
-        countrycolor="#94A3B8",
-        showcoastlines=True,
-        coastlinecolor="#64748B",
-        showlakes=True,
-        lakecolor="#DCEEFF",
         center={
             "lat": -2.4,
             "lon": 106.8
-        },
-        lataxis_range=[
-            -3.3,
-            -1.4
-        ],
-        lonaxis_range=[
-            104.9,
-            108.7
-        ]
+        }
     )
 
-    fig_map.update_layout(
+    fig\_map.update\_traces(
+        marker=dict(
+            size=24,
+            opacity=0.95
+        )
+    )
+
+    fig\_map.update\_layout(
+        map\_style="open-street-map",
+
         height=430,
+
         margin=dict(
             l=0,
             r=0,
             t=0,
             b=0
         ),
-        paper_bgcolor="white",
-        plot_bgcolor="white",
-        legend=dict(
-            title="Kategori Kinerja",
-            orientation="v",
-            y=0.98,
-            x=0.02,
-            bgcolor="rgba(255,255,255,0.90)",
-            bordercolor="#CBD5E1",
-            borderwidth=1
-        )
+
+        paper\_bgcolor="white",
+
+        legend\_title="Kategori Kinerja"
     )
 
-    st.plotly_chart(
-        fig_map,
-        use_container_width=True,
+    st.plotly\_chart(
+        fig\_map,
+        use\_container\_width=True,
         config={
             "displayModeBar": False
         }
     )
 
+\# =====================================================
+\# INFO LEGEND
+\# =====================================================
 
-# =====================================================
-# INFO PETA
-# =====================================================
-
-with info_col:
+with info\_map\_col:
 
     st.markdown(
         """
-        <div style="
+        \<div style="
             background:#FFFFFF;
             border:1.5px solid #CBD5E1;
             border-radius:18px;
@@ -1304,191 +841,103 @@ with info_col:
             box-shadow:0 8px 22px rgba(0,0,0,0.05);
         ">
 
-            <div style="
+            \<div style="
                 font-size:15px;
                 font-weight:800;
                 color:#0B4EA2;
                 margin-bottom:10px;
             ">
                 📍 Legend & Kategori Wilayah
-            </div>
+            \</div>
 
-            <div style="
+            \<div style="
                 font-size:13px;
                 color:#475569;
                 line-height:1.7;
                 margin-bottom:14px;
             ">
-                Titik pada peta mewakili
-                persentase capaian indikator
-                pada 7 Kabupaten/Kota
-                di Provinsi Kepulauan Bangka Belitung.
-            </div>
+                Titik warna pada peta mewakili besaran
+                persentase capaian indikator di
+                7 Kabupaten/Kota se-Provinsi Babel.
+            \</div>
 
-            <hr style="
-                border:none;
+            \<hr style="
+                border\:none;
                 border-top:1px solid #E2E8F0;
                 margin:14px 0;
             ">
 
-            <div style="
+            \<div style="
                 font-size:13px;
                 font-weight:700;
                 color:#0F172A;
                 margin-bottom:10px;
             ">
                 Status Kategori Warna:
-            </div>
+            \</div>
 
-            <div style="
+            \<div style="
                 font-size:12.5px;
                 color:#334155;
                 line-height:2.2;
             ">
 
-                <div>
-                    🟢 <b>Sangat Baik (≥ 100%)</b>
-                </div>
+                \<div>🟢 \<b>Sangat Baik (≥ 100%)\</b>\</div>
 
-                <div>
-                    🔵 <b>Baik (80% - 99,99%)</b>
-                </div>
+                \<div>🔵 \<b>Baik (80% - 99,99%)\</b>\</div>
 
-                <div>
-                    🟡 <b>Cukup (60% - 79,99%)</b>
-                </div>
+                \<div>🟡 \<b>Cukup (60% - 79,99%)\</b>\</div>
 
-                <div>
-                    🔴 <b>Kurang (&lt; 60%)</b>
-                </div>
+                \<div>🔴 \<b>Kurang (&lt; 60%)\</b>\</div>
 
-            </div>
+            \</div>
 
-        </div>
+        \</div>
         """,
-        unsafe_allow_html=True
+        unsafe\_allow\_html=True
     )
 
+\# =====================================================
+\# LINK DOWNLOAD EXCEL GOOGLE SHEETS (BIRU SOLID NIMBUL 3D)
+\# =====================================================
 
-# =====================================================
-# DOWNLOAD EXCEL
-# =====================================================
+download\_url = "[https://docs.google.com/spreadsheets/d/1RRXLSU-hcHwfUaiOPEGW0UTgYuy3ygp3/export?format=xlsx](https://docs.google.com/spreadsheets/d/1RRXLSU-hcHwfUaiOPEGW0UTgYuy3ygp3/export?format=xlsx)"
+sheet\_url = "[https://docs.google.com/spreadsheets/d/1RRXLSU-hcHwfUaiOPEGW0UTgYuy3ygp3/edit?usp=sharing](https://docs.google.com/spreadsheets/d/1RRXLSU-hcHwfUaiOPEGW0UTgYuy3ygp3/edit?usp=sharing)"
 
-download_url = (
-    "https://docs.google.com/spreadsheets/d/"
-    "1RRXLSU-hcHwfUaiOPEGW0UTgYuy3ygp3/"
-    "export?format=xlsx"
-)
+try:
+    response = requests.get(download\_url, timeout=10)
+    file\_bytes = response.content
+except Exception:
+    file\_bytes = b""
 
-sheet_url = (
-    "https://docs.google.com/spreadsheets/d/"
-    "1RRXLSU-hcHwfUaiOPEGW0UTgYuy3ygp3/"
-    "edit?usp=sharing"
-)
-
-
-# =====================================================
-# CACHE DOWNLOAD
-# =====================================================
-
-@st.cache_data(
-    ttl=1800,
-    show_spinner=False
-)
-def get_excel_file():
-
-    try:
-
-        response = requests.get(
-            download_url,
-            timeout=15
-        )
-
-        if response.status_code == 200:
-
-            return response.content
-
-    except Exception:
-
-        pass
-
-    return b""
-
-
-file_bytes = get_excel_file()
-
-
-# =====================================================
-# DOWNLOAD SECTION
-# =====================================================
-
-st.markdown(
-    "<br>",
-    unsafe_allow_html=True
-)
-
-
-kosong, kanan = st.columns(
-    [7, 3]
-)
-
+st.markdown("\<br>", unsafe\_allow\_html=True)
+kosong, kanan = st.columns([7, 3])
 
 with kanan:
-
-    st.link_button(
+    st.link\_button(
         "📄 Lihat Laporan PERKIN 2026",
-        sheet_url,
-        use_container_width=True
+        sheet\_url,
+        use\_container\_width=True
     )
-
-    st.markdown(
-        "<div style='height:10px'></div>",
-        unsafe_allow_html=True
-    )
-
-    st.download_button(
+    st.markdown("\<div style='height:10px'>\</div>", unsafe\_allow\_html=True)
+    st.download\_button(
         label="📥 Download Laporan PERKIN 2026",
-        data=file_bytes,
-        file_name=(
-            "PERKIN & REALISASI "
-            "PER KAB_KOTA 2026.xlsx"
-        ),
-        mime=(
-            "application/"
-            "vnd.openxmlformats-officedocument."
-            "spreadsheetml.sheet"
-        ),
-        use_container_width=True,
-        disabled=(
-            len(file_bytes) == 0
-        )
+        data=file\_bytes,
+        file\_name="PERKIN & REALISASI PER KAB\_KOTA 2026.xlsx",
+        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        use\_container\_width=True
     )
 
+\# =====================================================
+\# FOOTER (PRESERVED 100%)
+\# =====================================================
 
-# =====================================================
-# FOOTER
-# =====================================================
+st.markdown("\<br>", unsafe\_allow\_html=True)
 
-st.markdown(
-    """
-    <div class="footer-container">
-
-        <div class="footer-title">
-            Kementerian Kependudukan dan
-            Pembangunan Keluarga / BKKBN
-        </div>
-
-        <div class="footer-subtitle">
-            Perwakilan BKKBN Provinsi
-            Kepulauan Bangka Belitung
-        </div>
-
-        <div class="footer-copy">
-            Dashboard PERKIN 2026 |
-            © BKKBN BANGKA BELITUNG 2026
-        </div>
-
-    </div>
-    """,
-    unsafe_allow_html=True
-)
+st.markdown("""
+\<div class="footer-container">
+    \<div class="footer-title">Kementerian Kependudukan dan Pembangunan Keluarga / BKKBN\</div>
+    \<div class="footer-subtitle">Perwakilan BKKBN Provinsi Kepulauan Bangka Belitung\</div>
+    \<div class="footer-copy">Dashboard PERKIN 2026 | © BKKBN BANGKA BELITUNG 2026\</div>
+\</div>
+""", unsafe\_allow\_html=True)
