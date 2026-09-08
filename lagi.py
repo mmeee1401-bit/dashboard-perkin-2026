@@ -833,68 +833,32 @@ with map_col:
 with info_map_col:
 
     st.markdown(
-        textwrap.dedent("""
-        <div style="
-            background:#FFFFFF;
-            border:1.5px solid #CBD5E1;
-            border-radius:18px;
-            padding:20px;
-            box-shadow:0 8px 22px rgba(0,0,0,0.05);
-        ">
+        """
+<div style="background:#FFFFFF; border:1.5px solid #CBD5E1; border-radius:18px; padding:20px; box-shadow:0 8px 22px rgba(0,0,0,0.05);">
 
-            <div style="
-                font-size:15px;
-                font-weight:800;
-                color:#0B4EA2;
-                margin-bottom:10px;
-            ">
-                📍 Legend & Kategori Wilayah
-            </div>
+<div style="font-size:15px; font-weight:800; color:#0B4EA2; margin-bottom:10px;">
+📍 Legend & Kategori Wilayah
+</div>
 
-            <div style="
-                font-size:13px;
-                color:#475569;
-                line-height:1.7;
-                margin-bottom:14px;
-            ">
-                Titik warna pada peta mewakili besaran
-                persentase capaian indikator di
-                7 Kabupaten/Kota se-Provinsi Babel.
-            </div>
+<div style="font-size:13px; color:#475569; line-height:1.7; margin-bottom:14px;">
+Titik warna pada peta mewakili besaran persentase capaian indikator di 7 Kabupaten/Kota se-Provinsi Babel.
+</div>
 
-            <hr style="
-                border:none;
-                border-top:1px solid #E2E8F0;
-                margin:14px 0;
-            ">
+<hr style="border:none; border-top:1px solid #E2E8F0; margin:14px 0;">
 
-            <div style="
-                font-size:13px;
-                font-weight:700;
-                color:#0F172A;
-                margin-bottom:10px;
-            ">
-                Status Kategori Warna:
-            </div>
+<div style="font-size:13px; font-weight:700; color:#0F172A; margin-bottom:10px;">
+Status Kategori Warna:
+</div>
 
-            <div style="
-                font-size:12.5px;
-                color:#334155;
-                line-height:2.2;
-            ">
+<div style="font-size:12.5px; color:#334155; line-height:2.2;">
+<div>🟢 <b>Sangat Baik (≥ 100%)</b></div>
+<div>🔵 <b>Baik (80% - 99,99%)</b></div>
+<div>🟡 <b>Cukup (60% - 79,99%)</b></div>
+<div>🔴 <b>Kurang (&lt; 60%)</b></div>
+</div>
 
-                <div>🟢 <b>Sangat Baik (≥ 100%)</b></div>
-
-                <div>🔵 <b>Baik (80% - 99,99%)</b></div>
-
-                <div>🟡 <b>Cukup (60% - 79,99%)</b></div>
-
-                <div>🔴 <b>Kurang (&lt; 60%)</b></div>
-
-            </div>
-
-        </div>
-        """),
+</div>
+        """,
         unsafe_allow_html=True
     )
 
