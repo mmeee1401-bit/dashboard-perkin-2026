@@ -3,6 +3,7 @@ import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 from io import BytesIO
+import textwrap
 import requests
 import base64
 import os
@@ -832,7 +833,7 @@ with map_col:
 with info_map_col:
 
     st.markdown(
-        """
+        textwrap.dedent("""
         <div style="
             background:#FFFFFF;
             border:1.5px solid #CBD5E1;
@@ -893,7 +894,7 @@ with info_map_col:
             </div>
 
         </div>
-        """,
+        """),
         unsafe_allow_html=True
     )
 
