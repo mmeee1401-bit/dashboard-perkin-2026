@@ -760,38 +760,40 @@ df_map["Kategori_Status"] = kategori_list
 with map_col:
 
     fig_map = px.scatter_map(
-        df_map,
+    df_map,
 
-        lat="lat",
-        lon="lon",
+    lat="lat",
+    lon="lon",
 
-        hover_name="Kabupaten",
+    hover_name="Kabupaten",
 
-        hover_data={
-            "Capaian": ":.1f",
-            "Realisasi": ":.1f",
-            "Target": ":.1f",
-            "lat": False,
-            "lon": False,
-            "Kategori_Status": True
-        },
+    hover_data={
+        "Capaian": ":.1f",
+        "Realisasi": ":.1f",
+        "Target": ":.1f",
+        "lat": False,
+        "lon": False,
+        "Kategori_Status": True
+    },
 
-        color="Kategori_Status",
+    color="Kategori_Status",
 
-        color_discrete_map={
-            "Sangat Baik (≥100%)": "#10B981",
-            "Baik (80%-99.9%)": "#3B82F6",
-            "Cukup (60%-79.9%)": "#F59E0B",
-            "Kurang (<60%)": "#EF4444"
-        },
+    color_discrete_map={
+        "Sangat Baik (≥100%)": "#10B981",
+        "Baik (80%-99.9%)": "#3B82F6",
+        "Cukup (60%-79.9%)": "#F59E0B",
+        "Kurang (<60%)": "#EF4444"
+    },
 
-        zoom=7.4,
+    zoom=7.4,
 
-        center={
-            "lat": -2.4,
-            "lon": 106.8
-        }
-    )
+    center={
+        "lat": -2.4,
+        "lon": 106.8
+    },
+
+    map_style="open-street-map"
+)
 
     fig_map.update_traces(
         marker=dict(
